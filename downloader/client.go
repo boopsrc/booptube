@@ -1,20 +1,31 @@
 package downloader
 
 import (
+	"bufio"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
+	"sync"
 	"time"
 
 	"booptube/assets"
 	"booptube/config"
 	"booptube/video"
 )
+
+type Handlers struct {
+	OnLine     func(string)
+	OnProgress func(float64)
+}
+
+var progressRE = regexp.MustCompile(`(\d+(?:\.\d+)?)%`)
 
 type Client struct {
 	cfg config.Config
@@ -59,7 +70,7 @@ func (c *Client) EnsureFfmpeg(ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) Download(ctx context.Context, rawURL string, format video.Format) error {
+func (c *Client) Download(ctx context.Context, rawURL string, format video.Format, h *Handlers) error {
 	if c.cfg.DownloadDir == "" {
 		return fmt.Errorf("pasta de destino nao definida")
 	}
@@ -96,12 +107,61 @@ func (c *Client) Download(ctx context.Context, rawURL string, format video.Forma
 	}
 
 	cmd := exec.CommandContext(ctx, c.cfg.YtdlpPath, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
+	if h == nil {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("download falhou: %w", err)
+		}
+		return nil
+	}
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("stdout pipe: %w", err)
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("stderr pipe: %w", err)
+	}
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("iniciar yt-dlp: %w", err)
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		scanStream(stdout, h)
+	}()
+	go func() {
+		defer wg.Done()
+		scanStream(stderr, h)
+	}()
+	wg.Wait()
+
+	if err := cmd.Wait(); err != nil {
 		return fmt.Errorf("download falhou: %w", err)
 	}
 	return nil
+}
+
+func scanStream(r io.Reader, h *Handlers) {
+	sc := bufio.NewScanner(r)
+	for sc.Scan() {
+		line := sc.Text()
+		if h.OnLine != nil {
+			h.OnLine(line)
+		}
+		if h.OnProgress != nil {
+			if m := progressRE.FindStringSubmatch(line); len(m) > 1 {
+				var pct float64
+				if _, err := fmt.Sscanf(m[1], "%f", &pct); err == nil {
+					h.OnProgress(pct)
+				}
+			}
+		}
+	}
 }
 
 func ensureBinary(ctx context.Context, data []byte, dest string) error {

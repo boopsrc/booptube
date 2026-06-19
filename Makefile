@@ -2,8 +2,9 @@ YTDLP_VERSION ?= 2026.06.09
 FFMPEG_VERSION ?= 8.1.1
 BUILD_DIR := .build
 BINARY := $(BUILD_DIR)/booptube
+BINARY_GUI := $(BUILD_DIR)/booptube-gui
 
-.PHONY: fetch-ytdlp fetch-ffmpeg fetch-deps build clean
+.PHONY: fetch-ytdlp fetch-ffmpeg fetch-deps build build-gui clean
 
 fetch-ytdlp:
 	YTDLP_VERSION=$(YTDLP_VERSION) ./scripts/fetch-ytdlp.sh
@@ -16,6 +17,10 @@ fetch-deps: fetch-ytdlp fetch-ffmpeg
 build: fetch-deps
 	mkdir -p $(BUILD_DIR)
 	go build -o $(BINARY) .
+
+build-gui: fetch-deps
+	mkdir -p $(BUILD_DIR)
+	CGO_ENABLED=1 go build -tags gui -o $(BINARY_GUI) .
 
 clean:
 	rm -rf $(BUILD_DIR)

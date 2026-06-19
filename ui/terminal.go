@@ -76,7 +76,7 @@ func Run(ctx context.Context, cfg *config.Config, dl *downloader.Client, skipDir
 		*dl = *downloader.New(dlCfg)
 
 		fmt.Fprintf(os.Stderr, "baixando %s como %s...\n", parsed, format)
-		if err := dl.Download(ctx, parsed, format); err != nil {
+		if err := dl.Download(ctx, parsed, format, nil); err != nil {
 			fmt.Fprintf(os.Stderr, "erro: %v\n", err)
 			continue
 		}

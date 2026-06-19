@@ -1,6 +1,13 @@
 # Guia do usuário — booptube
 
-O **booptube** baixa vídeos do YouTube pelo terminal. Você escolhe a pasta de destino, cola o link e escolhe **mp4** (vídeo) ou **mp3** (só áudio).
+O **booptube** baixa vídeos do YouTube. Você escolhe a pasta de destino, cola o link e escolhe **mp4** (vídeo) ou **mp3** (só áudio).
+
+Há duas formas de usar:
+
+| Modo | Executável | Descrição |
+|------|------------|-----------|
+| **Terminal (CLI)** | `booptube` / `booptube.exe` | Prompts interativos no terminal |
+| **Interface gráfica (GUI)** | `booptube-gui` / `booptube-gui.exe` | Janela com visual neon futurista |
 
 Não é preciso instalar ffmpeg nem yt-dlp — tudo já vem dentro do programa.
 
@@ -10,18 +17,43 @@ Não é preciso instalar ffmpeg nem yt-dlp — tudo já vem dentro do programa.
 
 Você precisa apenas do executável:
 
-| Sistema | Arquivo |
-|---------|---------|
-| Windows | `booptube.exe` |
-| Linux / macOS | `booptube` |
+| Sistema | CLI | GUI |
+|---------|-----|-----|
+| Windows | `booptube.exe` | `booptube-gui.exe` |
+| Linux / macOS | `booptube` | `booptube-gui` |
 
-Abra um terminal (PowerShell, CMD, Terminal) na pasta onde está o executável, ou use o caminho completo.
+Abra um terminal (PowerShell, CMD, Terminal) na pasta onde está o executável, ou use o caminho completo. A GUI abre com duplo clique no explorador de arquivos.
 
 **Primeira execução:** o programa pode demorar alguns segundos enquanto prepara os componentes internos. Isso é normal e acontece só uma vez (ou após atualizar o booptube).
 
 ---
 
-## Como abrir o booptube
+## Interface gráfica (GUI)
+
+Abra **`booptube-gui`** (ou `booptube-gui.exe` no Windows). A janela tem fundo escuro com acentos neon.
+
+### Passo a passo na GUI
+
+1. **Pasta de destino** — digite o caminho ou clique em **Escolher...** para selecionar uma pasta. A última pasta usada é carregada automaticamente.
+2. **URL do YouTube** — cole o link do vídeo.
+3. **Formato** — selecione **MP4 (vídeo)** ou **MP3 (áudio)**.
+4. Clique em **Baixar**.
+
+Durante o download:
+
+- A barra de progresso mostra o percentual quando disponível.
+- O **Log** exibe as mensagens do yt-dlp.
+- Use **Cancelar** para interromper.
+
+Ao concluir, a mensagem **Concluído.** aparece e você pode baixar outro vídeo sem fechar a janela.
+
+### Encerrar a GUI
+
+Feche a janela normalmente. Se houver download em andamento, ele será cancelado.
+
+---
+
+## Como abrir o booptube (CLI)
 
 ### Windows (PowerShell ou CMD)
 

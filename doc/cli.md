@@ -89,6 +89,41 @@ O executável fica em `.build/booptube`.
 
 > **Nota:** os binários em `assets/ytdlp/` e `assets/ffmpeg/` não vão para o git. Rode os scripts fetch ou `make build` antes de compilar.
 
+### Compilar a GUI (`booptube-gui`)
+
+A interface gráfica usa [Fyne](https://fyne.io/) e exige **CGO** habilitado.
+
+| Requisito extra | Observação |
+|-----------------|------------|
+| GCC (MinGW-w64) | Windows — instale via [MSYS2](https://www.msys2.org/) (`pacman -S mingw-w64-x86_64-gcc`) ou [TDM-GCC](https://jmeubank.github.io/tdm-gcc/) |
+| pkg-config | Linux — necessário para compilar Fyne |
+| Xcode CLT | macOS — `xcode-select --install` |
+
+#### Windows
+
+```powershell
+cd booptube
+.\scripts\fetch-ytdlp.ps1
+.\scripts\fetch-ffmpeg.ps1
+$env:CGO_ENABLED = "1"
+go build -tags gui -o .build/booptube-gui.exe .
+```
+
+Ou: `make build-gui` (requer ambiente make + bash no PATH).
+
+O executável fica em `.build/booptube-gui.exe`.
+
+#### Linux / macOS
+
+```bash
+cd booptube
+make build-gui
+# ou:
+CGO_ENABLED=1 go build -tags gui -o .build/booptube-gui .
+```
+
+> **Nota:** `make build` compila apenas a CLI (`booptube`). A GUI é um binário separado com build tag `gui`.
+
 ### Adicionar ao PATH (opcional)
 
 Copie ou crie um atalho do executável em uma pasta que já esteja no PATH, ou invoque pelo caminho completo:
@@ -326,6 +361,7 @@ Disponíveis em Linux e macOS (requer `bash`, `curl`, `unzip` e `tar`):
 | `make fetch-ffmpeg` | Executa `scripts/fetch-ffmpeg.sh` |
 | `make fetch-deps` | Roda os dois scripts acima |
 | `make build` | Roda `fetch-deps` e compila para `.build/booptube` |
+| `make build-gui` | Roda `fetch-deps` e compila para `.build/booptube-gui` (requer CGO) |
 | `make clean` | Remove a pasta `.build/` |
 
 Versões pinadas: `YTDLP_VERSION ?= 2026.06.09`, `FFMPEG_VERSION ?= 8.1.1`.
@@ -386,6 +422,10 @@ Tamanho aproximado do executável: **~200 MB** (yt-dlp + ffmpeg/ffprobe essentia
 ---
 
 ## Solução de problemas
+
+### `cgo: C compiler "gcc" not found` (build da GUI)
+
+A GUI (`booptube-gui`) exige CGO. No Windows, instale MinGW-w64 e garanta `gcc` no PATH antes de `make build-gui` ou `go build -tags gui`.
 
 ### `yt-dlp embutido ausente: execute fetch-ytdlp...`
 
