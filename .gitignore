@@ -1,0 +1,6 @@
+/assets/ytdlp/**/*
+!/assets/ytdlp/.gitkeep
+/.build/
+/testdata/
+*.test
+*.out
