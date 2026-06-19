@@ -5,7 +5,10 @@ Referência para **desenvolvedores** e quem compila o projeto.
 | Guia | Conteúdo |
 |------|----------|
 | [projeto.md](projeto.md) | Visão geral — CLI, GUI, instalação, arquitetura |
-| [gui.md](gui.md) | Instalação e compilação da GUI |
+| [build-windows.md](build-windows.md) | Compilar no Windows |
+| [build-linux.md](build-linux.md) | Compilar no Linux |
+| [build-macos.md](build-macos.md) | Compilar no macOS |
+| [gui.md](gui.md) | Instalação e uso da GUI |
 | [usuario.md](usuario.md) | Uso do dia a dia |
 
 Aplicação para baixar vídeos do YouTube em **mp4** ou **mp3**. Dois binários: **booptube** (CLI) e **booptube-gui** (Fyne). Ambos embutem **yt-dlp** e **ffmpeg**; na primeira execução são extraídos para o cache do usuário.
@@ -56,79 +59,29 @@ Fluxo resumido:
 
 ## Instalação e build
 
-### Pré-requisitos
+### Pré-requisitos gerais
 
 | Requisito | Versão mínima | Observação |
 |-----------|---------------|------------|
-| Go | 1.22+ | só para compilar a partir do código |
-| bash / curl / unzip | Linux e macOS | para `scripts/*.sh` e `make build` |
-| PowerShell | 5+ | para `scripts/*.ps1` no Windows |
+| Go | 1.22+ | compilar CLI e GUI |
+| PowerShell | 5+ | scripts fetch no Windows |
+| bash, curl, unzip, tar | — | scripts fetch e Makefile no Linux/macOS |
 
 **ffmpeg e yt-dlp não precisam ser instalados no sistema** — vêm embutidos no executável compilado.
 
-### Compilar a partir do código
+### Guias de compilação por sistema operacional
 
-#### Windows
+Instruções completas (fetch, CLI, GUI, clean, troubleshooting):
 
-```powershell
-cd booptube
-.\scripts\fetch-ytdlp.ps1
-.\scripts\fetch-ffmpeg.ps1
-go build -o .build/booptube.exe ./cmd/cli
-```
+| SO | Guia |
+|----|------|
+| Windows | **[build-windows.md](build-windows.md)** — PowerShell + scripts `.ps1` |
+| Linux | **[build-linux.md](build-linux.md)** — Makefile + scripts `.sh` |
+| macOS | **[build-macos.md](build-macos.md)** — Makefile + Xcode CLT |
 
-O executável fica em `.build/booptube.exe` (~200 MB).
+A GUI usa [Fyne](https://fyne.io/) e exige **CGO** (GCC no Windows, pkg-config + OpenGL no Linux, Xcode CLT no macOS).
 
-#### Linux / macOS
-
-```bash
-cd booptube
-chmod +x scripts/*.sh
-./scripts/fetch-ytdlp.sh
-./scripts/fetch-ffmpeg.sh
-go build -o .build/booptube ./cmd/cli
-```
-
-Ou, em um comando: `make build`.
-
-O executável fica em `.build/booptube`.
-
-> **Nota:** os binários em `assets/ytdlp/` e `assets/ffmpeg/` não vão para o git. Rode os scripts fetch ou `make build` antes de compilar.
-
-### Compilar a GUI (`booptube-gui`)
-
-A interface gráfica usa [Fyne](https://fyne.io/) e exige **CGO** habilitado.
-
-| Requisito extra | Observação |
-|-----------------|------------|
-| GCC (MinGW-w64) | Windows — instale via [MSYS2](https://www.msys2.org/) (`pacman -S mingw-w64-x86_64-gcc`) ou [TDM-GCC](https://jmeubank.github.io/tdm-gcc/) |
-| pkg-config | Linux — necessário para compilar Fyne |
-| Xcode CLT | macOS — `xcode-select --install` |
-
-#### Windows
-
-```powershell
-cd booptube
-.\scripts\fetch-ytdlp.ps1
-.\scripts\fetch-ffmpeg.ps1
-$env:CGO_ENABLED = "1"
-go build -o .build/booptube-gui.exe ./cmd/gui
-```
-
-Ou: `make build-gui` (requer ambiente make + bash no PATH).
-
-O executável fica em `.build/booptube-gui.exe`.
-
-#### Linux / macOS
-
-```bash
-cd booptube
-make build-gui
-# ou:
-CGO_ENABLED=1 go build -o .build/booptube-gui ./cmd/gui
-```
-
-> **Nota:** `make build` compila apenas a CLI (`booptube`). A GUI é um binário separado em `./cmd/gui`.
+> Os binários em `assets/ytdlp/` e `assets/ffmpeg/` não vão para o git. Rode o fetch antes da primeira compilação (detalhes nos guias acima).
 
 ### Adicionar ao PATH (opcional)
 
@@ -431,7 +384,7 @@ Tamanho aproximado do executável: **~200 MB** (yt-dlp + ffmpeg/ffprobe essentia
 
 ### `cgo: C compiler "gcc" not found` (build da GUI)
 
-A GUI (`booptube-gui`) exige CGO. No Windows, instale MinGW-w64 e garanta `gcc` no PATH antes de `make build-gui` ou `go build ./cmd/gui`.
+Veja [build-windows.md](build-windows.md) — instale MinGW e garanta `gcc` no PATH.
 
 ### `yt-dlp embutido ausente: execute fetch-ytdlp...`
 

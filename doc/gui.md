@@ -52,88 +52,15 @@ Reabra o terminal. Agora `booptube-gui` funciona de qualquer pasta.
 
 ### 2. Compilar você mesmo
 
-Necessário se você clonou o repositório e ainda não tem o executável.
+Siga o guia de build do seu sistema operacional (inclui Go, GCC/CGO para GUI, fetch e comandos de compilação):
 
-#### Passo 1 — Instalar Go
+| SO | Guia |
+|----|------|
+| Windows | **[build-windows.md](build-windows.md)** |
+| Linux | **[build-linux.md](build-linux.md)** |
+| macOS | **[build-macos.md](build-macos.md)** |
 
-Baixe em [go.dev/dl](https://go.dev/dl/) (versão **1.22+**).
-
-#### Passo 2 — Instalar compilador C (obrigatório para a GUI)
-
-A GUI usa Fyne, que depende de **CGO**.
-
-**Windows — MSYS2 + MinGW (recomendado):**
-
-1. Instale [MSYS2](https://www.msys2.org/)
-2. Abra **MSYS2 MinGW x64** e execute:
-
-```bash
-pacman -S mingw-w64-x86_64-gcc
-```
-
-3. Adicione ao PATH do Windows:
-
-```text
-C:\msys64\mingw64\bin
-```
-
-4. Abra um **novo** PowerShell e confirme:
-
-```powershell
-gcc --version
-```
-
-**Linux (Debian/Ubuntu):**
-
-```bash
-sudo apt update
-sudo apt install gcc libgl1-mesa-dev xorg-dev pkg-config
-```
-
-**macOS:**
-
-```bash
-xcode-select --install
-```
-
-#### Passo 3 — Baixar dependências embutidas (yt-dlp + ffmpeg)
-
-**Windows:**
-
-```powershell
-cd booptube
-.\scripts\fetch-ytdlp.ps1
-.\scripts\fetch-ffmpeg.ps1
-```
-
-**Linux / macOS:**
-
-```bash
-cd booptube
-make fetch-deps
-```
-
-#### Passo 4 — Compilar a GUI
-
-**Windows:**
-
-```powershell
-$env:CGO_ENABLED = "1"
-go build -o .build/booptube-gui.exe ./cmd/gui
-```
-
-**Linux / macOS:**
-
-```bash
-make build-gui
-```
-
-O executável ficará em:
-
-| Sistema | Caminho |
-|---------|---------|
-| Windows | `.build/booptube-gui.exe` |
-| Linux / macOS | `.build/booptube-gui` |
+O executável da GUI ficará em `.build/booptube-gui` ou `.build/booptube-gui.exe`.
 
 #### Erro comum na compilação
 
@@ -259,7 +186,7 @@ CLI e GUI compartilham o mesmo arquivo — a pasta escolhida na GUI aparece na C
 | Problema | O que fazer |
 |----------|-------------|
 | Janela não abre | Execute pelo terminal para ver mensagens de erro |
-| `gcc not found` ao compilar | Instale MinGW e adicione ao PATH |
+| `gcc not found` ao compilar | [build-windows.md](build-windows.md) — instale MinGW e adicione ao PATH |
 | `Informe a pasta de destino` | Preencha o campo ou use Escolher... |
 | `apenas URLs do YouTube` | Use link de vídeo do YouTube, não de outro site |
 | `pasta nao gravavel` | Escolha pasta com permissão de escrita (ex.: Downloads) |

@@ -16,7 +16,10 @@ Disponível em **dois modos**:
 | **[doc/projeto.md](doc/projeto.md)** | Visão geral completa — o que foi feito, instalação, como rodar |
 | **[doc/gui.md](doc/gui.md)** | GUI — instalar, compilar e usar o `booptube-gui` |
 | **[doc/usuario.md](doc/usuario.md)** | Usuário — CLI e GUI no dia a dia |
-| **[doc/cli.md](doc/cli.md)** | Desenvolvedor — build, Makefile, config técnica |
+| **[doc/build-windows.md](doc/build-windows.md)** | Compilar no Windows (PowerShell) |
+| **[doc/build-linux.md](doc/build-linux.md)** | Compilar no Linux |
+| **[doc/build-macos.md](doc/build-macos.md)** | Compilar no macOS |
+| **[doc/cli.md](doc/cli.md)** | Desenvolvedor — referência técnica, Makefile, config |
 | **[doc/README.md](doc/README.md)** | Índice da documentação |
 
 ## Uso rápido — GUI
@@ -56,28 +59,10 @@ Loop interativo: pasta → URL → formato (`1`=mp4, `2`=mp3). Digite `q` ou `sa
 
 ## Compilar (desenvolvedores)
 
-**CLI:**
+| Sistema | Guia |
+|---------|------|
+| Windows | **[doc/build-windows.md](doc/build-windows.md)** |
+| Linux | **[doc/build-linux.md](doc/build-linux.md)** |
+| macOS | **[doc/build-macos.md](doc/build-macos.md)** |
 
-```bash
-make build                    # Linux/macOS → .build/booptube
-go build -o .build/booptube.exe ./cmd/cli   # Windows
-```
-
-**GUI** (requer GCC / CGO):
-
-```bash
-make build-gui                # Linux/macOS → .build/booptube-gui
-$env:CGO_ENABLED="1"; go build -o .build/booptube-gui.exe ./cmd/gui   # Windows
-```
-
-Antes de compilar, baixe os assets embutidos:
-
-```powershell
-.\scripts\fetch-ytdlp.ps1; .\scripts\fetch-ffmpeg.ps1   # Windows
-```
-
-```bash
-make fetch-deps   # Linux/macOS
-```
-
-Detalhes em [doc/cli.md](doc/cli.md) e [doc/projeto.md](doc/projeto.md).
+Referência técnica: [doc/cli.md](doc/cli.md) · Visão geral: [doc/projeto.md](doc/projeto.md)

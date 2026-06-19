@@ -5,6 +5,9 @@ Visão geral de **tudo que foi implementado** até o momento: o que o booptube f
 | Guia relacionado | Conteúdo |
 |------------------|----------|
 | [usuario.md](usuario.md) | Uso do dia a dia (CLI e GUI) |
+| [build-windows.md](build-windows.md) | Compilar no Windows |
+| [build-linux.md](build-linux.md) | Compilar no Linux |
+| [build-macos.md](build-macos.md) | Compilar no macOS |
 | [cli.md](cli.md) | Referência técnica para desenvolvedores |
 | [README.md](README.md) | Índice da pasta `doc/` |
 
@@ -130,94 +133,15 @@ sudo install -m 755 booptube booptube-gui /usr/local/bin/
 
 ### Opção B — Compilar a partir do código
 
-#### Pré-requisitos gerais
+Guias completos por sistema operacional (fetch, CLI, GUI, clean, troubleshooting):
 
-| Requisito | Versão | Necessário para |
-|-----------|--------|-----------------|
-| Go | 1.22+ | Compilar CLI e GUI |
-| PowerShell | 5+ | Scripts fetch no Windows |
-| bash, curl, unzip | — | Scripts fetch no Linux/macOS |
+| SO | Guia |
+|----|------|
+| Windows | **[build-windows.md](build-windows.md)** |
+| Linux | **[build-linux.md](build-linux.md)** |
+| macOS | **[build-macos.md](build-macos.md)** |
 
-#### Compilar a CLI
-
-**Windows:**
-
-```powershell
-cd booptube
-.\scripts\fetch-ytdlp.ps1
-.\scripts\fetch-ffmpeg.ps1
-go build -o .build/booptube.exe ./cmd/cli
-```
-
-**Linux / macOS:**
-
-```bash
-cd booptube
-make build
-# ou manualmente:
-chmod +x scripts/*.sh
-./scripts/fetch-ytdlp.sh
-./scripts/fetch-ffmpeg.sh
-go build -o .build/booptube ./cmd/cli
-```
-
-Resultado: `.build/booptube` ou `.build/booptube.exe`
-
-> Os binários em `assets/ytdlp/` e `assets/ffmpeg/` não estão no git. Rode os scripts fetch antes de compilar.
-
-#### Compilar a GUI
-
-A GUI usa [Fyne](https://fyne.io/) e exige **CGO habilitado** (`CGO_ENABLED=1`). No Windows, é necessário um compilador C (GCC).
-
-##### Pré-requisitos extras da GUI
-
-| Sistema | Requisito | Como instalar |
-|---------|-----------|---------------|
-| **Windows** | GCC (MinGW-w64) | [MSYS2](https://www.msys2.org/): `pacman -S mingw-w64-x86_64-gcc` — adicione `C:\msys64\mingw64\bin` ao PATH |
-| **Windows** | Alternativa | [TDM-GCC](https://jmeubank.github.io/tdm-gcc/) |
-| **Linux** | pkg-config, libgl, gcc | Debian/Ubuntu: `sudo apt install gcc libgl1-mesa-dev xorg-dev pkg-config` |
-| **macOS** | Xcode CLT | `xcode-select --install` |
-
-##### Verificar se o GCC está disponível (Windows)
-
-```powershell
-gcc --version
-# deve mostrar a versão do MinGW, ex.: x86_64-w64-mingw32-gcc
-```
-
-Se aparecer `gcc not found`, instale o MinGW e reinicie o terminal.
-
-##### Comandos de build da GUI
-
-**Windows:**
-
-```powershell
-cd booptube
-.\scripts\fetch-ytdlp.ps1
-.\scripts\fetch-ffmpeg.ps1
-$env:CGO_ENABLED = "1"
-go build -o .build/booptube-gui.exe ./cmd/gui
-```
-
-**Linux / macOS:**
-
-```bash
-cd booptube
-make build-gui
-# ou:
-CGO_ENABLED=1 go build -o .build/booptube-gui ./cmd/gui
-```
-
-Resultado: `.build/booptube-gui` ou `.build/booptube-gui.exe`
-
-##### Makefile — targets disponíveis
-
-| Comando | Saída |
-|---------|-------|
-| `make build` | `.build/booptube` (CLI) |
-| `make build-gui` | `.build/booptube-gui` (GUI, requer CGO) |
-| `make fetch-deps` | Baixa yt-dlp e ffmpeg para embed |
-| `make clean` | Remove `.build/` |
+Resumo: dois binários em `./cmd/cli` (CLI) e `./cmd/gui` (GUI Fyne + CGO). Saída em `.build/`. Makefile disponível no Linux e macOS (`make build`, `make build-gui`).
 
 ---
 
@@ -356,7 +280,7 @@ booptube/
 
 ### GUI não compila: `cgo: C compiler "gcc" not found`
 
-Instale MinGW-w64 (MSYS2) no Windows e garanta que `gcc` está no PATH. Veja a seção [Compilar a GUI](#compilar-a-gui).
+GUI não compila: instale MinGW (Windows) conforme [build-windows.md](build-windows.md).
 
 ### `yt-dlp embutido ausente` ou `ffmpeg embutido ausente`
 
@@ -391,8 +315,7 @@ Verifique conexão com a internet. O log na janela mostra mensagens de erro do y
 |------|---------|
 | Rodar GUI (Windows) | `booptube-gui.exe` |
 | Rodar CLI (Windows) | `booptube.exe` |
-| Compilar CLI | `go build -o .build/booptube.exe ./cmd/cli` |
-| Compilar GUI (Windows) | `$env:CGO_ENABLED="1"; go build -o .build/booptube-gui.exe ./cmd/gui` |
+| Compilar CLI | Ver [build-windows.md](build-windows.md), [build-linux.md](build-linux.md) ou [build-macos.md](build-macos.md) |
 | Compilar tudo (Linux/macOS) | `make build && make build-gui` |
 
 Para detalhes técnicos adicionais (Makefile, embed, flags), consulte [cli.md](cli.md).
