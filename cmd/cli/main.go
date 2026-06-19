@@ -1,9 +1,8 @@
-//go:build gui
-
 package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -16,10 +15,16 @@ import (
 )
 
 func main() {
+	dirFlag := flag.String("dir", "", "pasta de destino (pula prompt da pasta)")
+	flag.Parse()
+
 	cfg, err := config.Load()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "erro ao carregar config: %v\n", err)
 		os.Exit(1)
+	}
+	if *dirFlag != "" {
+		cfg.DownloadDir = *dirFlag
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -39,7 +44,7 @@ func main() {
 	}
 	cancel()
 
-	if err := ui.RunGUI(ctx, &cfg, dl); err != nil {
+	if err := ui.Run(ctx, &cfg, dl, *dirFlag != ""); err != nil {
 		fmt.Fprintf(os.Stderr, "erro: %v\n", err)
 		os.Exit(1)
 	}

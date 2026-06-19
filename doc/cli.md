@@ -74,7 +74,7 @@ Fluxo resumido:
 cd booptube
 .\scripts\fetch-ytdlp.ps1
 .\scripts\fetch-ffmpeg.ps1
-go build -o .build/booptube.exe .
+go build -o .build/booptube.exe ./cmd/cli
 ```
 
 O executável fica em `.build/booptube.exe` (~200 MB).
@@ -86,7 +86,7 @@ cd booptube
 chmod +x scripts/*.sh
 ./scripts/fetch-ytdlp.sh
 ./scripts/fetch-ffmpeg.sh
-go build -o .build/booptube .
+go build -o .build/booptube ./cmd/cli
 ```
 
 Ou, em um comando: `make build`.
@@ -112,7 +112,7 @@ cd booptube
 .\scripts\fetch-ytdlp.ps1
 .\scripts\fetch-ffmpeg.ps1
 $env:CGO_ENABLED = "1"
-go build -tags gui -o .build/booptube-gui.exe .
+go build -o .build/booptube-gui.exe ./cmd/gui
 ```
 
 Ou: `make build-gui` (requer ambiente make + bash no PATH).
@@ -125,10 +125,10 @@ O executável fica em `.build/booptube-gui.exe`.
 cd booptube
 make build-gui
 # ou:
-CGO_ENABLED=1 go build -tags gui -o .build/booptube-gui .
+CGO_ENABLED=1 go build -o .build/booptube-gui ./cmd/gui
 ```
 
-> **Nota:** `make build` compila apenas a CLI (`booptube`). A GUI é um binário separado com build tag `gui`.
+> **Nota:** `make build` compila apenas a CLI (`booptube`). A GUI é um binário separado em `./cmd/gui`.
 
 ### Adicionar ao PATH (opcional)
 
@@ -269,7 +269,7 @@ booptube [flags]
 **Ajuda:**
 
 ```bash
-go run . -h
+go run ./cmd/cli -h
 # ou, após compilar:
 ./.build/booptube -h
 ```
@@ -431,7 +431,7 @@ Tamanho aproximado do executável: **~200 MB** (yt-dlp + ffmpeg/ffprobe essentia
 
 ### `cgo: C compiler "gcc" not found` (build da GUI)
 
-A GUI (`booptube-gui`) exige CGO. No Windows, instale MinGW-w64 e garanta `gcc` no PATH antes de `make build-gui` ou `go build -tags gui`.
+A GUI (`booptube-gui`) exige CGO. No Windows, instale MinGW-w64 e garanta `gcc` no PATH antes de `make build-gui` ou `go build ./cmd/gui`.
 
 ### `yt-dlp embutido ausente: execute fetch-ytdlp...`
 
@@ -484,12 +484,12 @@ Cache corrompido ou extração incompleta. Apague `%LocalAppData%\booptube\ffmpe
 chmod +x scripts/*.sh
 ./scripts/fetch-ytdlp.sh
 ./scripts/fetch-ffmpeg.sh
-go build -o .build/booptube .
+go build -o .build/booptube ./cmd/cli
 
 # Compilar (Windows)
 .\scripts\fetch-ytdlp.ps1
 .\scripts\fetch-ffmpeg.ps1
-go build -o .build/booptube.exe .
+go build -o .build/booptube.exe ./cmd/cli
 
 # Usar
 .\.build\booptube.exe

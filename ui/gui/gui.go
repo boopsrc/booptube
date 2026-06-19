@@ -1,6 +1,4 @@
-//go:build gui
-
-package ui
+package gui
 
 import (
 	"context"
@@ -11,6 +9,7 @@ import (
 
 	"booptube/config"
 	"booptube/downloader"
+	"booptube/ui"
 	"booptube/video"
 
 	"fyne.io/fyne/v2"
@@ -23,7 +22,7 @@ import (
 
 const maxLogLines = 20
 
-func RunGUI(ctx context.Context, cfg *config.Config, dl *downloader.Client) error {
+func Run(ctx context.Context, cfg *config.Config, dl *downloader.Client) error {
 	a := app.NewWithID("dev.booptube.gui")
 	a.Settings().SetTheme(newNeonTheme())
 
@@ -150,7 +149,7 @@ func RunGUI(ctx context.Context, cfg *config.Config, dl *downloader.Client) erro
 			setStatus("Informe a pasta de destino.")
 			return
 		}
-		if err := ensureDir(dir); err != nil {
+		if err := ui.EnsureDir(dir); err != nil {
 			setStatus(fmt.Sprintf("Erro: %v", err))
 			return
 		}
@@ -219,7 +218,7 @@ func RunGUI(ctx context.Context, cfg *config.Config, dl *downloader.Client) erro
 				return
 			}
 			dir := uri.Path()
-			if err := ensureDir(dir); err != nil {
+			if err := ui.EnsureDir(dir); err != nil {
 				setStatus(fmt.Sprintf("Erro: %v", err))
 				return
 			}

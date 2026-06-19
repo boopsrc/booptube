@@ -146,7 +146,7 @@ sudo install -m 755 booptube booptube-gui /usr/local/bin/
 cd booptube
 .\scripts\fetch-ytdlp.ps1
 .\scripts\fetch-ffmpeg.ps1
-go build -o .build/booptube.exe .
+go build -o .build/booptube.exe ./cmd/cli
 ```
 
 **Linux / macOS:**
@@ -158,7 +158,7 @@ make build
 chmod +x scripts/*.sh
 ./scripts/fetch-ytdlp.sh
 ./scripts/fetch-ffmpeg.sh
-go build -o .build/booptube .
+go build -o .build/booptube ./cmd/cli
 ```
 
 Resultado: `.build/booptube` ou `.build/booptube.exe`
@@ -196,7 +196,7 @@ cd booptube
 .\scripts\fetch-ytdlp.ps1
 .\scripts\fetch-ffmpeg.ps1
 $env:CGO_ENABLED = "1"
-go build -tags gui -o .build/booptube-gui.exe .
+go build -o .build/booptube-gui.exe ./cmd/gui
 ```
 
 **Linux / macOS:**
@@ -205,7 +205,7 @@ go build -tags gui -o .build/booptube-gui.exe .
 cd booptube
 make build-gui
 # ou:
-CGO_ENABLED=1 go build -tags gui -o .build/booptube-gui .
+CGO_ENABLED=1 go build -o .build/booptube-gui ./cmd/gui
 ```
 
 Resultado: `.build/booptube-gui` ou `.build/booptube-gui.exe`
@@ -320,15 +320,15 @@ A pasta é salva automaticamente após cada download bem-sucedido. Se você usar
 
 ```text
 booptube/
-├── main.go              # Entrada CLI (build tag !gui)
-├── main_gui.go          # Entrada GUI (build tag gui)
+├── cmd/
+│   ├── cli/main.go      # Entrada booptube (CLI)
+│   └── gui/main.go      # Entrada booptube-gui
 ├── config/              # config.json — Load/Save
 ├── downloader/          # yt-dlp, ffmpeg embed, Download()
 ├── video/               # ParseURL, Format (mp4/mp3)
 ├── ui/
-│   ├── terminal.go      # Interface CLI
-│   ├── gui.go           # Interface GUI (Fyne)
-│   └── gui_theme.go     # Tema neon
+│   ├── terminal.go      # Interface CLI (ui.Run)
+│   └── gui/             # Interface GUI Fyne (gui.Run)
 ├── assets/              # //go:embed yt-dlp e ffmpeg por OS
 ├── scripts/             # fetch-ytdlp, fetch-ffmpeg
 └── doc/                 # Documentação
@@ -336,12 +336,10 @@ booptube/
 
 ### Dois binários, um repositório
 
-| Arquivo | Build tag | Comando de build |
-|---------|-----------|------------------|
-| `main.go` | `!gui` | `go build -o booptube .` |
-| `main_gui.go` | `gui` | `go build -tags gui -o booptube-gui .` |
-
-A tag `gui` inclui os arquivos `ui/gui.go` e `ui/gui_theme.go`, que dependem do Fyne.
+| Pasta | Comando de build | Saída |
+|-------|------------------|-------|
+| `cmd/cli` | `go build -o booptube ./cmd/cli` | CLI |
+| `cmd/gui` | `CGO_ENABLED=1 go build -o booptube-gui ./cmd/gui` | GUI (Fyne) |
 
 ---
 
@@ -393,8 +391,8 @@ Verifique conexão com a internet. O log na janela mostra mensagens de erro do y
 |------|---------|
 | Rodar GUI (Windows) | `booptube-gui.exe` |
 | Rodar CLI (Windows) | `booptube.exe` |
-| Compilar CLI | `go build -o .build/booptube.exe .` |
-| Compilar GUI (Windows) | `$env:CGO_ENABLED="1"; go build -tags gui -o .build/booptube-gui.exe .` |
+| Compilar CLI | `go build -o .build/booptube.exe ./cmd/cli` |
+| Compilar GUI (Windows) | `$env:CGO_ENABLED="1"; go build -o .build/booptube-gui.exe ./cmd/gui` |
 | Compilar tudo (Linux/macOS) | `make build && make build-gui` |
 
 Para detalhes técnicos adicionais (Makefile, embed, flags), consulte [cli.md](cli.md).

@@ -11,21 +11,24 @@ description: >-
 
 ## Estrutura do Projeto
 
-A raiz do projeto contém apenas os contextos de negócio e os arquivos de configuração essenciais. Esqueça estruturas complexas como /pkg ou /internal.
+A raiz contém os contextos de negócio e configuração essencial. Entry points ficam em `cmd/`. Evite `pkg/` ou `internal/` desnecessários.
 
 ```
 booptube/
+├── cmd/
+│   ├── cli/main.go      # booptube (terminal)
+│   └── gui/main.go      # booptube-gui (Fyne)
 ├── downloader/          # Contexto 1: Engine de download
 │   ├── client.go
 │   └── client_test.go
 ├── video/               # Contexto 2: Domínio/Regras de negócio do vídeo
 │   └── model.go
-├── ui/                  # Contexto 3: Interface (CLI/Terminal)
-│   └── terminal.go
+├── ui/                  # Contexto 3: Interface
+│   ├── terminal.go      # CLI (ui.Run)
+│   └── gui/             # GUI Fyne (gui.Run)
 ├── config/              # Contexto 4: Configurações globais
 │   └── config.go
-├── go.mod
-└── main.go              # Ponto de entrada único
+└── go.mod
 ```
 
 ### Onde colocar código novo
@@ -35,10 +38,11 @@ booptube/
 | Download, HTTP, streams | `downloader/` | `client.go` |
 | Modelos e regras de vídeo | `video/` | `model.go` |
 | CLI, prompts, output | `ui/` | `terminal.go` |
+| GUI Fyne | `ui/gui/` | `gui.go`, `theme.go` |
 | Env, flags, defaults | `config/` | `config.go` |
-| Wiring e bootstrap | raiz | `main.go` |
+| Wiring e bootstrap | `cmd/cli/`, `cmd/gui/` | `main.go` |
 
-**Não criar:** `pkg/`, `internal/`, `cmd/`, `api/`, `services/`, `handlers/`, `controllers/`, `repositories/`.
+**Não criar:** `pkg/`, `internal/`, `api/`, `services/`, `handlers/`, `controllers/`, `repositories/`.
 
 ## Regras de Código
 
@@ -105,4 +109,4 @@ func (c *Client) Download(url string) error
 - [ ] Funções correlatas no mesmo arquivo, não espalhadas em múltiplos arquivos finos
 - [ ] Erros com `fmt.Errorf` / `errors.New`, sem tipos customizados triviais
 - [ ] Sem comentários que apenas repetem o nome da função ou tipo
-- [ ] `main.go` apenas faz wiring; lógica de negócio fica nos contextos
+- [ ] `cmd/*/main.go` apenas faz wiring; lógica de negócio fica nos contextos

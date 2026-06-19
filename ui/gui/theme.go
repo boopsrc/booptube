@@ -1,6 +1,4 @@
-//go:build gui
-
-package ui
+package gui
 
 import (
 	"image/color"

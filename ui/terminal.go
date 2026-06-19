@@ -25,7 +25,7 @@ func Run(ctx context.Context, cfg *config.Config, dl *downloader.Client, skipDir
 		var dir string
 		if skipDirPrompt && cfg.DownloadDir != "" {
 			dir = cfg.DownloadDir
-			if err := ensureDir(dir); err != nil {
+			if err := EnsureDir(dir); err != nil {
 				fmt.Fprintf(os.Stderr, "erro: %v\n", err)
 				skipDirPrompt = false
 				continue
@@ -108,7 +108,7 @@ func promptDir(sc *bufio.Scanner, current string) (string, error) {
 		line = current
 	}
 	dir := filepath.Clean(strings.TrimSpace(line))
-	if err := ensureDir(dir); err != nil {
+	if err := EnsureDir(dir); err != nil {
 		fmt.Fprintf(os.Stderr, "erro: %v\n", err)
 		return promptDir(sc, current)
 	}
@@ -126,7 +126,7 @@ func promptLine(sc *bufio.Scanner, label string) (string, error) {
 	return strings.TrimSpace(sc.Text()), nil
 }
 
-func ensureDir(dir string) error {
+func EnsureDir(dir string) error {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("criar pasta: %w", err)
 	}

@@ -16,11 +16,11 @@ fetch-deps: fetch-ytdlp fetch-ffmpeg
 
 build: fetch-deps
 	mkdir -p $(BUILD_DIR)
-	go build -o $(BINARY) .
+	go build -o $(BINARY) ./cmd/cli
 
 build-gui: fetch-deps
 	mkdir -p $(BUILD_DIR)
-	CGO_ENABLED=1 go build -tags gui -o $(BINARY_GUI) .
+	CGO_ENABLED=1 go build -o $(BINARY_GUI) ./cmd/gui
 
 clean:
 	rm -rf $(BUILD_DIR)

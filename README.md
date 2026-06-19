@@ -60,14 +60,14 @@ Loop interativo: pasta → URL → formato (`1`=mp4, `2`=mp3). Digite `q` ou `sa
 
 ```bash
 make build                    # Linux/macOS → .build/booptube
-go build -o .build/booptube.exe .   # Windows
+go build -o .build/booptube.exe ./cmd/cli   # Windows
 ```
 
 **GUI** (requer GCC / CGO):
 
 ```bash
 make build-gui                # Linux/macOS → .build/booptube-gui
-$env:CGO_ENABLED="1"; go build -tags gui -o .build/booptube-gui.exe .   # Windows
+$env:CGO_ENABLED="1"; go build -o .build/booptube-gui.exe ./cmd/gui   # Windows
 ```
 
 Antes de compilar, baixe os assets embutidos:

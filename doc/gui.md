@@ -119,7 +119,7 @@ make fetch-deps
 
 ```powershell
 $env:CGO_ENABLED = "1"
-go build -tags gui -o .build/booptube-gui.exe .
+go build -o .build/booptube-gui.exe ./cmd/gui
 ```
 
 **Linux / macOS:**
