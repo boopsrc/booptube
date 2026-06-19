@@ -1,18 +1,20 @@
-# booptube — documentação da CLI
+# booptube — documentação técnica da CLI
 
-CLI interativa para baixar vídeos do YouTube em **mp4** ou **mp3**. O binário embute o **yt-dlp**; na primeira execução ele é extraído para o cache do usuário.
+Referência para **desenvolvedores** e quem compila o projeto. Para uso do dia a dia, veja **[usuario.md](usuario.md)**.
+
+CLI interativa para baixar vídeos do YouTube em **mp4** ou **mp3**. O binário embute **yt-dlp** e **ffmpeg** (essentials); na primeira execução são extraídos para o cache do usuário.
 
 ## Índice
 
 1. [Como funciona](#como-funciona)
-2. [Instalação](#instalação)
+2. [Instalação e build](#instalação-e-build)
 3. [Configuração](#configuração)
-4. [Uso](#uso)
+4. [Uso da CLI](#uso-da-cli)
 5. [Comandos e flags](#comandos-e-flags)
 6. [Prompts interativos](#prompts-interativos)
 7. [Comandos do Makefile](#comandos-do-makefile)
 8. [Arquivos gerados](#arquivos-gerados)
-9. [Dependências](#dependências)
+9. [Dependências embutidas](#dependências-embutidas)
 10. [Solução de problemas](#solução-de-problemas)
 
 ---
@@ -23,7 +25,7 @@ CLI interativa para baixar vídeos do YouTube em **mp4** ou **mp3**. O binário 
 booptube inicia
     │
     ├─ Carrega config.json (última pasta, se existir)
-    ├─ Extrai yt-dlp embutido para o cache (se necessário)
+    ├─ Extrai yt-dlp e ffmpeg embutidos para o cache (se necessário)
     │
     └─ Loop interativo
            ├─ Pergunta pasta de destino (ou usa -dir / config salva)
@@ -36,7 +38,7 @@ booptube inicia
 Fluxo resumido:
 
 1. Você informa **onde** salvar, **qual** vídeo e **em qual formato**.
-2. O booptube chama o **yt-dlp** (já incluído no executável) com os parâmetros corretos.
+2. O booptube chama o **yt-dlp** (incluído no executável) com **ffmpeg** embutido via `--ffmpeg-location`.
 3. O arquivo é gravado na pasta escolhida com o nome `Título do vídeo.ext`.
 4. Após cada download bem-sucedido, a **última pasta** é memorizada para a próxima sessão.
 
@@ -46,38 +48,17 @@ Fluxo resumido:
 
 ---
 
-## Instalação
+## Instalação e build
 
 ### Pré-requisitos
 
 | Requisito | Versão mínima | Observação |
 |-----------|---------------|------------|
 | Go | 1.22+ | só para compilar a partir do código |
-| ffmpeg | qualquer recente | **obrigatório** para mp3 e merge mp4 |
-| make / curl | Linux e macOS | para `make build` |
-| PowerShell | 5+ | para `fetch-ytdlp.ps1` no Windows |
+| bash / curl / unzip | Linux e macOS | para `scripts/*.sh` e `make build` |
+| PowerShell | 5+ | para `scripts/*.ps1` no Windows |
 
-### Instalar ffmpeg
-
-**Windows (winget):**
-
-```powershell
-winget install Gyan.FFmpeg
-```
-
-Reabra o terminal após instalar para o `ffmpeg` entrar no PATH.
-
-**Linux (Debian/Ubuntu):**
-
-```bash
-sudo apt install ffmpeg
-```
-
-**macOS (Homebrew):**
-
-```bash
-brew install ffmpeg
-```
+**ffmpeg e yt-dlp não precisam ser instalados no sistema** — vêm embutidos no executável compilado.
 
 ### Compilar a partir do código
 
@@ -85,24 +66,28 @@ brew install ffmpeg
 
 ```powershell
 cd booptube
-.\fetch-ytdlp.ps1
+.\scripts\fetch-ytdlp.ps1
+.\scripts\fetch-ffmpeg.ps1
 go build -o .build/booptube.exe .
 ```
 
-O executável fica em `.build/booptube.exe`.
+O executável fica em `.build/booptube.exe` (~200 MB).
 
 #### Linux / macOS
 
 ```bash
 cd booptube
-make build
+chmod +x scripts/*.sh
+./scripts/fetch-ytdlp.sh
+./scripts/fetch-ffmpeg.sh
+go build -o .build/booptube .
 ```
 
-Equivalente a `make fetch-ytdlp` + `go build -o .build/booptube .`.
+Ou, em um comando: `make build`.
 
 O executável fica em `.build/booptube`.
 
-> **Nota:** os binários do yt-dlp em `assets/ytdlp/` não vão para o git. É preciso rodar `fetch-ytdlp.ps1` ou `make fetch-ytdlp` antes do build.
+> **Nota:** os binários em `assets/ytdlp/` e `assets/ffmpeg/` não vão para o git. Rode os scripts fetch ou `make build` antes de compilar.
 
 ### Adicionar ao PATH (opcional)
 
@@ -152,22 +137,38 @@ Na primeira execução, o yt-dlp embutido é copiado para:
 
 Se você recompilar o booptube com uma versão nova do yt-dlp, o cache é atualizado automaticamente (checksum diferente).
 
-### Variável de ambiente (build)
+### Cache do ffmpeg
+
+Na primeira execução, **ffmpeg** e **ffprobe** embutidos são copiados para:
+
+| Sistema | Caminho |
+|---------|---------|
+| Windows | `%LocalAppData%\booptube\ffmpeg\ffmpeg.exe` e `ffprobe.exe` |
+| Linux / macOS | `~/.cache/booptube/ffmpeg/ffmpeg` e `ffprobe` |
+
+O yt-dlp recebe `--ffmpeg-location` apontando para essa pasta. Recompilar com ffmpeg novo atualiza o cache automaticamente.
+
+### Variáveis de ambiente (build)
 
 | Variável | Uso |
 |----------|-----|
-| `YTDLP_VERSION` | Versão do yt-dlp ao rodar `fetch-ytdlp.ps1` ou `make fetch-ytdlp` (padrão: `2026.06.09`) |
+| `YTDLP_VERSION` | Versão do yt-dlp em `scripts/fetch-ytdlp.{sh,ps1}` / `make fetch-ytdlp` (padrão: `2026.06.09`) |
+| `FFMPEG_VERSION` | Versão Gyan essentials no Windows (padrão: `8.1.1`) |
 
 Exemplo:
 
-```powershell
-$env:YTDLP_VERSION = "2026.06.09"
-.\fetch-ytdlp.ps1
+```bash
+export YTDLP_VERSION=2026.06.09
+export FFMPEG_VERSION=8.1.1
+./scripts/fetch-ytdlp.sh
+./scripts/fetch-ffmpeg.sh
 ```
 
 ---
 
-## Uso
+## Uso da CLI
+
+Guia passo a passo para usuários finais: **[usuario.md](usuario.md)**.
 
 ### Modo interativo (padrão)
 
@@ -309,35 +310,45 @@ Formato [1=mp4, 2=mp3] (Enter=mp4):
 | `1`, `mp4`, `video` | mp4 |
 | `2`, `mp3`, `audio` | mp3 |
 
-**mp4:** melhor vídeo + áudio, merge em mp4 (exige ffmpeg).
+**mp4:** melhor vídeo + áudio, merge em mp4 (ffmpeg embutido).
 
-**mp3:** extrai áudio e converte para mp3 (exige ffmpeg).
+**mp3:** extrai áudio e converte para mp3 (ffmpeg embutido).
 
 ---
 
 ## Comandos do Makefile
 
-Disponíveis em Linux e macOS (requer `make` e `curl`):
+Disponíveis em Linux e macOS (requer `bash`, `curl`, `unzip` e `tar`):
 
 | Comando | Descrição |
 |---------|-----------|
-| `make fetch-ytdlp` | Baixa yt-dlp para `assets/ytdlp/` (Windows, Linux e macOS arm64) |
-| `make build` | Roda `fetch-ytdlp` e compila para `.build/booptube` |
+| `make fetch-ytdlp` | Executa `scripts/fetch-ytdlp.sh` |
+| `make fetch-ffmpeg` | Executa `scripts/fetch-ffmpeg.sh` |
+| `make fetch-deps` | Roda os dois scripts acima |
+| `make build` | Roda `fetch-deps` e compila para `.build/booptube` |
 | `make clean` | Remove a pasta `.build/` |
 
-Versão pinada do yt-dlp no Makefile: `YTDLP_VERSION ?= 2026.06.09`.
+Versões pinadas: `YTDLP_VERSION ?= 2026.06.09`, `FFMPEG_VERSION ?= 8.1.1`.
 
 Override:
 
 ```bash
-make build YTDLP_VERSION=2026.06.09
+make build YTDLP_VERSION=2026.06.09 FFMPEG_VERSION=8.1.1
 ```
 
-### Script PowerShell (Windows)
+### Scripts shell (Linux / macOS)
 
 | Script | Descrição |
 |--------|-----------|
-| `.\fetch-ytdlp.ps1` | Equivalente ao `make fetch-ytdlp` |
+| `./scripts/fetch-ytdlp.sh` | Equivalente ao `make fetch-ytdlp` |
+| `./scripts/fetch-ffmpeg.sh` | Equivalente ao `make fetch-ffmpeg` |
+
+### Scripts PowerShell (Windows)
+
+| Script | Descrição |
+|--------|-----------|
+| `.\scripts\fetch-ytdlp.ps1` | Equivalente ao `make fetch-ytdlp` |
+| `.\scripts\fetch-ffmpeg.ps1` | Equivalente ao `make fetch-ffmpeg` |
 
 ---
 
@@ -358,18 +369,19 @@ O nome vem do título do vídeo no YouTube (`%(title)s` do yt-dlp).
 |---------|------------|
 | `.build/` | Executável compilado (ignorado pelo git) |
 | `assets/ytdlp/` | Binários yt-dlp antes do embed (ignorado pelo git) |
+| `assets/ffmpeg/` | Binários ffmpeg/ffprobe antes do embed (ignorado pelo git) |
 
 ---
 
-## Dependências
+## Dependências embutidas
 
 | Componente | Incluído no booptube? | Necessário? |
 |------------|----------------------|-------------|
 | yt-dlp | Sim (embutido) | Automático na extração |
-| ffmpeg | Não | **Sim** — mp3 e merge mp4 |
+| ffmpeg + ffprobe | Sim (embutido, essentials) | Automático na extração |
 | Go | Não | Só para compilar |
 
-Sem ffmpeg, o download pode iniciar mas falha na conversão ou merge com mensagem do yt-dlp sobre `ffmpeg` / `ffprobe`.
+Tamanho aproximado do executável: **~200 MB** (yt-dlp + ffmpeg/ffprobe essentials por plataforma).
 
 ---
 
@@ -377,7 +389,7 @@ Sem ffmpeg, o download pode iniciar mas falha na conversão ou merge com mensage
 
 ### `yt-dlp embutido ausente: execute fetch-ytdlp...`
 
-O build foi feito sem baixar os assets. Rode `fetch-ytdlp.ps1` ou `make fetch-ytdlp` e recompile.
+O build foi feito sem baixar os assets. Rode `scripts/fetch-ytdlp.sh`, `scripts/fetch-ytdlp.ps1` ou `make fetch-ytdlp` e recompile.
 
 ### `apenas URLs do YouTube sao suportadas`
 
@@ -387,9 +399,13 @@ A URL não é de um host YouTube reconhecido. Use link direto de vídeo (`watch?
 
 Escolha outra pasta ou corrija permissões. O booptube testa escrita antes de baixar.
 
+### `ffmpeg embutido ausente: execute fetch-ffmpeg...`
+
+O build foi feito sem baixar ffmpeg. Rode `scripts/fetch-ffmpeg.sh`, `scripts/fetch-ffmpeg.ps1` ou `make fetch-ffmpeg` e recompile.
+
 ### `Postprocessing: ffprobe and ffmpeg not found`
 
-Instale ffmpeg e garanta que está no PATH do mesmo terminal onde roda o booptube.
+Cache corrompido ou extração incompleta. Apague `%LocalAppData%\booptube\ffmpeg\` (ou `~/.cache/booptube/ffmpeg/`) e execute o booptube novamente.
 
 ### Download lento ou falha de rede
 
@@ -397,9 +413,15 @@ Instale ffmpeg e garanta que está no PATH do mesmo terminal onde roda o booptub
 - URLs muito longas ou vídeos restritos podem falhar no yt-dlp.
 - Recompile com yt-dlp mais recente: `make fetch-ytdlp` + `make build`.
 
+### Atualizar ffmpeg embutido
+
+1. Ajuste `FFMPEG_VERSION` em `Makefile` / `scripts/fetch-ffmpeg.{sh,ps1}` se quiser pinar outra release.
+2. Rode o fetch e recompile.
+3. Na próxima execução, o cache local do ffmpeg será substituído.
+
 ### Atualizar yt-dlp embutido
 
-1. Ajuste `YTDLP_VERSION` em `Makefile` / `fetch-ytdlp.ps1` se quiser pinar outra release.
+1. Ajuste `YTDLP_VERSION` em `Makefile` / `scripts/fetch-ytdlp.{sh,ps1}` se quiser pinar outra release.
 2. Rode o fetch e recompile.
 3. Na próxima execução, o cache local do yt-dlp será substituído.
 
@@ -407,9 +429,20 @@ Instale ffmpeg e garanta que está no PATH do mesmo terminal onde roda o booptub
 
 ## Referência rápida
 
-```powershell
+**Usuário:** [usuario.md](usuario.md)
+
+**Desenvolvedor:**
+
+```bash
+# Compilar (Linux/macOS)
+chmod +x scripts/*.sh
+./scripts/fetch-ytdlp.sh
+./scripts/fetch-ffmpeg.sh
+go build -o .build/booptube .
+
 # Compilar (Windows)
-.\fetch-ytdlp.ps1
+.\scripts\fetch-ytdlp.ps1
+.\scripts\fetch-ffmpeg.ps1
 go build -o .build/booptube.exe .
 
 # Usar

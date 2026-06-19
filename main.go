@@ -31,8 +31,13 @@ func main() {
 	defer stop()
 
 	dl := downloader.New(cfg)
-	initCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	initCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	if err := dl.EnsureYtdlp(initCtx); err != nil {
+		cancel()
+		fmt.Fprintf(os.Stderr, "erro: %v\n", err)
+		os.Exit(1)
+	}
+	if err := dl.EnsureFfmpeg(initCtx); err != nil {
 		cancel()
 		fmt.Fprintf(os.Stderr, "erro: %v\n", err)
 		os.Exit(1)

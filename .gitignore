@@ -1,5 +1,7 @@
 /assets/ytdlp/**/*
 !/assets/ytdlp/.gitkeep
+/assets/ffmpeg/**/*
+!/assets/ffmpeg/.gitkeep
 /.build/
 /testdata/
 *.test

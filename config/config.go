@@ -11,10 +11,14 @@ import (
 type Config struct {
 	DownloadDir string `json:"download_dir"`
 	YtdlpPath   string `json:"-"`
+	FfmpegDir   string `json:"-"`
 }
 
 func Load() (Config, error) {
-	cfg := Config{YtdlpPath: defaultYtdlpPath()}
+	cfg := Config{
+		YtdlpPath: defaultYtdlpPath(),
+		FfmpegDir: defaultFfmpegDir(),
+	}
 	path, err := configPath()
 	if err != nil {
 		return cfg, err
@@ -30,6 +34,7 @@ func Load() (Config, error) {
 		return cfg, fmt.Errorf("parse config: %w", err)
 	}
 	cfg.YtdlpPath = defaultYtdlpPath()
+	cfg.FfmpegDir = defaultFfmpegDir()
 	return cfg, nil
 }
 
@@ -69,4 +74,12 @@ func defaultYtdlpPath() string {
 		name = "yt-dlp.exe"
 	}
 	return filepath.Join(dir, "booptube", name)
+}
+
+func defaultFfmpegDir() string {
+	dir, err := os.UserCacheDir()
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(dir, "booptube", "ffmpeg")
 }

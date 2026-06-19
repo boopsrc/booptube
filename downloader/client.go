@@ -30,45 +30,31 @@ func (c *Client) Config() config.Config {
 
 func (c *Client) EnsureYtdlp(ctx context.Context) error {
 	if len(assets.Ytdlp) == 0 {
-		return fmt.Errorf("yt-dlp embutido ausente: execute fetch-ytdlp.ps1 ou make fetch-ytdlp antes do build")
+		return fmt.Errorf("yt-dlp embutido ausente: execute scripts/fetch-ytdlp.ps1, scripts/fetch-ytdlp.sh ou make fetch-ytdlp antes do build")
 	}
 	if c.cfg.YtdlpPath == "" {
 		return fmt.Errorf("caminho de cache do yt-dlp indisponivel")
 	}
+	return ensureBinary(ctx, assets.Ytdlp, c.cfg.YtdlpPath)
+}
 
-	wantSum := sha256.Sum256(assets.Ytdlp)
-	wantHex := hex.EncodeToString(wantSum[:])
-
-	if data, err := os.ReadFile(c.cfg.YtdlpPath); err == nil {
-		got := sha256.Sum256(data)
-		if hex.EncodeToString(got[:]) == wantHex {
-			return nil
-		}
+func (c *Client) EnsureFfmpeg(ctx context.Context) error {
+	if len(assets.Ffmpeg) == 0 || len(assets.Ffprobe) == 0 {
+		return fmt.Errorf("ffmpeg embutido ausente: execute scripts/fetch-ffmpeg.ps1, scripts/fetch-ffmpeg.sh ou make fetch-ffmpeg antes do build")
 	}
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
+	if c.cfg.FfmpegDir == "" {
+		return fmt.Errorf("caminho de cache do ffmpeg indisponivel")
 	}
-
-	if err := os.MkdirAll(filepath.Dir(c.cfg.YtdlpPath), 0o755); err != nil {
-		return fmt.Errorf("criar cache yt-dlp: %w", err)
+	if err := os.MkdirAll(c.cfg.FfmpegDir, 0o755); err != nil {
+		return fmt.Errorf("criar cache ffmpeg: %w", err)
 	}
-
-	tmp := c.cfg.YtdlpPath + ".tmp"
-	if err := os.WriteFile(tmp, assets.Ytdlp, 0o755); err != nil {
-		return fmt.Errorf("gravar yt-dlp: %w", err)
+	ffmpegPath := filepath.Join(c.cfg.FfmpegDir, assets.FfmpegName)
+	ffprobePath := filepath.Join(c.cfg.FfmpegDir, assets.FfprobeName)
+	if err := ensureBinary(ctx, assets.Ffmpeg, ffmpegPath); err != nil {
+		return fmt.Errorf("instalar ffmpeg: %w", err)
 	}
-	if runtime.GOOS != "windows" {
-		if err := os.Chmod(tmp, 0o755); err != nil {
-			os.Remove(tmp)
-			return fmt.Errorf("chmod yt-dlp: %w", err)
-		}
-	}
-	if err := withRetry(5, func() error { return os.Rename(tmp, c.cfg.YtdlpPath) }); err != nil {
-		os.Remove(tmp)
-		return fmt.Errorf("instalar yt-dlp: %w", err)
+	if err := ensureBinary(ctx, assets.Ffprobe, ffprobePath); err != nil {
+		return fmt.Errorf("instalar ffprobe: %w", err)
 	}
 	return nil
 }
@@ -83,10 +69,14 @@ func (c *Client) Download(ctx context.Context, rawURL string, format video.Forma
 	if err := c.EnsureYtdlp(ctx); err != nil {
 		return err
 	}
+	if err := c.EnsureFfmpeg(ctx); err != nil {
+		return err
+	}
 
 	out := filepath.Join(c.cfg.DownloadDir, "%(title)s.%(ext)s")
 	args := []string{
 		"--no-playlist",
+		"--ffmpeg-location", c.cfg.FfmpegDir,
 		"-o", out,
 		rawURL,
 	}
@@ -110,6 +100,44 @@ func (c *Client) Download(ctx context.Context, rawURL string, format video.Forma
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("download falhou: %w", err)
+	}
+	return nil
+}
+
+func ensureBinary(ctx context.Context, data []byte, dest string) error {
+	wantSum := sha256.Sum256(data)
+	wantHex := hex.EncodeToString(wantSum[:])
+
+	if existing, err := os.ReadFile(dest); err == nil {
+		got := sha256.Sum256(existing)
+		if hex.EncodeToString(got[:]) == wantHex {
+			return nil
+		}
+	}
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
+	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
+		return fmt.Errorf("criar diretorio: %w", err)
+	}
+
+	tmp := dest + ".tmp"
+	if err := os.WriteFile(tmp, data, 0o755); err != nil {
+		return fmt.Errorf("gravar binario: %w", err)
+	}
+	if runtime.GOOS != "windows" {
+		if err := os.Chmod(tmp, 0o755); err != nil {
+			os.Remove(tmp)
+			return fmt.Errorf("chmod binario: %w", err)
+		}
+	}
+	if err := withRetry(5, func() error { return os.Rename(tmp, dest) }); err != nil {
+		os.Remove(tmp)
+		return fmt.Errorf("instalar binario: %w", err)
 	}
 	return nil
 }
