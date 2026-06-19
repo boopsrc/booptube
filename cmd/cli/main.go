@@ -12,11 +12,18 @@ import (
 	"booptube/config"
 	"booptube/downloader"
 	"booptube/ui"
+	"booptube/buildinfo"
 )
 
 func main() {
 	dirFlag := flag.String("dir", "", "pasta de destino (pula prompt da pasta)")
+	versionFlag := flag.Bool("version", false, "mostra versão e sai")
 	flag.Parse()
+
+	if *versionFlag {
+		fmt.Println("booptube", buildinfo.Info())
+		os.Exit(0)
+	}
 
 	cfg, err := config.Load()
 	if err != nil {

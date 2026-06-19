@@ -218,6 +218,7 @@ booptube [flags]
 | Flag | Tipo | Padrão | Descrição |
 |------|------|--------|-----------|
 | `-dir` | string | *(vazio)* | Pasta de destino. Quando informada, o prompt da pasta é omitido. |
+| `-version` | bool | `false` | Mostra versão, commit e data do build; encerra. |
 
 **Ajuda:**
 
@@ -232,9 +233,16 @@ Saída esperada:
 ```text
   -dir string
         pasta de destino (pula prompt da pasta)
+  -version
+        mostra versão e sai
 ```
 
-Não há outros flags na versão atual.
+Exemplo:
+
+```bash
+./.build/booptube -version
+# booptube 0.1.0 (abc1234, 2026-06-19T12:00:00Z)
+```
 
 ### Comandos de saída (dentro dos prompts)
 
@@ -376,7 +384,14 @@ O nome vem do título do vídeo no YouTube (`%(title)s` do yt-dlp).
 | ffmpeg + ffprobe | Sim (embutido, essentials) | Automático na extração |
 | Go | Não | Só para compilar |
 
-Tamanho aproximado do executável: **~200 MB** (yt-dlp + ffmpeg/ffprobe essentials por plataforma).
+Tamanho aproximado do executável: **~185–195 MB** (CLI) / **~235–245 MB** (GUI). A maior parte vem do yt-dlp + ffmpeg/ffprobe embutidos; `-ldflags "-s -w"` reduz ~5–15 MB na parte Go/Fyne.
+
+### Versão
+
+- Arquivo [`VERSION`](../VERSION) na raiz — fonte da versão de release (ex.: `0.1.0`)
+- Pacote [`buildinfo/`](../buildinfo/buildinfo.go) — variáveis `Version`, `Commit`, `BuildDate` injetadas no build (pasta `buildinfo/` em vez de `version/` por conflito de nome com `VERSION` no Windows)
+- CLI: flag `-version`
+- GUI: título da janela e subtítulo (`YouTube → MP4 / MP3 · v0.1.0`)
 
 ---
 

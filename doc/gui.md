@@ -10,7 +10,7 @@ Visão geral do projeto: [projeto.md](projeto.md) · Uso geral: [usuario.md](usu
 
 Aplicativo com **janela gráfica** para baixar vídeos do YouTube em MP4 ou MP3. Visual **neon futurista** (fundo escuro, acentos cyan e magenta).
 
-Faz tudo que a CLI faz, sem terminal:
+Faz tudo que a CLI faz, **sem terminal** (no Windows, a GUI compila com `-H=windowsgui` — duplo clique abre só a janela):
 
 - Escolher pasta de destino (digitando ou pelo explorador)
 - Colar URL do YouTube
@@ -100,7 +100,8 @@ Ao abrir, você verá:
 
 ```text
 ┌─────────────────────────────────────┐
-│  booptube          (título neon)    │
+│  booptube v0.1.0   (título neon)    │
+│  YouTube → MP4 / MP3 · v0.1.0       │
 ├─────────────────────────────────────┤
 │  Pasta de destino                   │
 │  [________________________] Escolher│

@@ -64,29 +64,52 @@ Os binários ficam em `assets/ytdlp/` e `assets/ffmpeg/` (não vão para o git).
 
 ---
 
-## 2. Compilar a CLI
+## 2. Compilar (recomendado)
+
+Após o fetch, use o script de build com flags otimizadas (`-s -w`, versão injetada, GUI sem console):
+
+```powershell
+.\scripts\build.ps1
+```
+
+Compilar só a CLI ou só a GUI:
+
+```powershell
+.\scripts\build.ps1 -Target cli
+.\scripts\build.ps1 -Target gui
+```
+
+Saída:
+- `.build/booptube.exe` (~185–195 MB)
+- `.build/booptube-gui.exe` (~235–245 MB)
+
+> A maior parte do tamanho vem do **ffmpeg e yt-dlp embutidos** (~90–130 MB). As flags `-s -w` reduzem só a parte Go/Fyne (~5–15 MB).
+
+### Compilar manualmente
 
 ```powershell
 New-Item -ItemType Directory -Force -Path .build
-go build -o .build/booptube.exe ./cmd/cli
+go build -trimpath -ldflags "-s -w" -o .build/booptube.exe ./cmd/cli
+$env:CGO_ENABLED = "1"
+go build -trimpath -ldflags "-s -w -H=windowsgui" -o .build/booptube-gui.exe ./cmd/gui
 ```
 
-Saída: `.build/booptube.exe` (~200 MB)
+A flag `-H=windowsgui` evita que uma janela de terminal abra junto com a GUI no duplo clique.
+
+A primeira compilação da GUI pode demorar vários minutos (Fyne + CGO).
 
 ---
 
-## 3. Compilar a GUI
+## 3. Versão
 
-Requer **GCC no PATH** e **CGO** habilitado:
+A versão de release fica em [`VERSION`](../VERSION) na raiz. O build injeta versão, commit e data via `-ldflags`.
 
 ```powershell
-$env:CGO_ENABLED = "1"
-go build -o .build/booptube-gui.exe ./cmd/gui
+.\.build\booptube.exe -version
+# booptube 0.1.0 (abc1234, 2026-06-19T...)
 ```
 
-Saída: `.build/booptube-gui.exe` (~250 MB)
-
-A primeira compilação da GUI pode demorar vários minutos (Fyne + CGO).
+A GUI exibe a versão no título da janela e no subtítulo da interface.
 
 ---
 
@@ -103,10 +126,11 @@ Remove-Item -Recurse -Force .build -ErrorAction SilentlyContinue
 ```powershell
 .\.build\booptube.exe
 .\.build\booptube.exe -dir "C:\Downloads\booptube"
+.\.build\booptube.exe -version
 .\.build\booptube-gui.exe
 ```
 
-A GUI também abre com duplo clique no Explorador de Arquivos.
+A GUI abre **somente a janela gráfica** (sem terminal) no duplo clique no Explorador de Arquivos.
 
 ### Adicionar ao PATH (opcional)
 
@@ -160,8 +184,9 @@ No dia a dia no Windows, prefira **PowerShell + scripts `.ps1`** (seções 1–3
 | Target | Equivalente PowerShell |
 |--------|------------------------|
 | `make fetch-deps` | `.\scripts\fetch-ytdlp.ps1; .\scripts\fetch-ffmpeg.ps1` |
-| `make build` | fetch + `go build -o .build/booptube.exe ./cmd/cli` |
-| `make build-gui` | fetch + `$env:CGO_ENABLED="1"; go build -o .build/booptube-gui.exe ./cmd/gui` |
+| `make build` | fetch + `.\scripts\build.ps1 -Target cli` |
+| `make build-gui` | fetch + `.\scripts\build.ps1 -Target gui` |
+| build completo | `.\scripts\build.ps1` |
 | `make clean` | `Remove-Item -Recurse -Force .build` |
 
 ---

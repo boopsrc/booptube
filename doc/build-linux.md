@@ -76,9 +76,9 @@ mkdir -p .build
 go build -o .build/booptube ./cmd/cli
 ```
 
-Saída: `.build/booptube` (~200 MB)
+Saída: `.build/booptube` (~185–195 MB)
 
-> `make build` já executa `fetch-deps` automaticamente.
+> `make build` aplica `-trimpath -ldflags "-s -w"` e injeta versão de [`VERSION`](../VERSION). A maior parte do tamanho vem dos binários embutidos (ffmpeg + yt-dlp).
 
 ---
 
@@ -96,7 +96,7 @@ make build-gui
 CGO_ENABLED=1 go build -o .build/booptube-gui ./cmd/gui
 ```
 
-Saída: `.build/booptube-gui` (~250 MB)
+Saída: `.build/booptube-gui` (~235–245 MB)
 
 ---
 

@@ -4,12 +4,17 @@ import (
 	"context"
 	"fmt"
 	"image/color"
+	"os"
+	"os/signal"
 	"strings"
 	"sync"
+	"syscall"
+	"time"
 
 	"booptube/config"
 	"booptube/downloader"
 	"booptube/ui"
+	"booptube/buildinfo"
 	"booptube/video"
 
 	"fyne.io/fyne/v2"
@@ -23,11 +28,52 @@ import (
 
 const maxLogLines = 20
 
-func Run(ctx context.Context, cfg *config.Config, dl *downloader.Client) error {
+func Run() int {
 	a := app.NewWithID("dev.booptube.gui")
 	a.Settings().SetTheme(newNeonTheme())
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	cfg, dl, err := bootstrap(ctx, a)
+	if err != nil {
+		return 1
+	}
+	return runApp(ctx, a, &cfg, dl)
+}
+
+func bootstrap(ctx context.Context, a fyne.App) (config.Config, *downloader.Client, error) {
+	cfg, err := config.Load()
+	if err != nil {
+		showFatal(a, fmt.Errorf("carregar config: %w", err))
+		return config.Config{}, nil, err
+	}
+
+	dl := downloader.New(cfg)
+	initCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+
+	if err := dl.EnsureYtdlp(initCtx); err != nil {
+		showFatal(a, err)
+		return config.Config{}, nil, err
+	}
+	if err := dl.EnsureFfmpeg(initCtx); err != nil {
+		showFatal(a, err)
+		return config.Config{}, nil, err
+	}
+	return cfg, dl, nil
+}
+
+func showFatal(a fyne.App, err error) {
 	w := a.NewWindow("booptube")
+	w.Resize(fyne.NewSize(480, 120))
+	dialog.ShowError(err, w)
+	w.Show()
+	a.Run()
+}
+
+func runApp(ctx context.Context, a fyne.App, cfg *config.Config, dl *downloader.Client) int {
+	w := a.NewWindow(fmt.Sprintf("booptube v%s", buildinfo.Short()))
 	w.Resize(fyne.NewSize(720, 640))
 	w.SetFixedSize(false)
 
@@ -248,7 +294,7 @@ func Run(ctx context.Context, cfg *config.Config, dl *downloader.Client) error {
 		w.Close()
 	})
 
-	subtitle := canvas.NewText("YouTube → MP4 / MP3", neonMuted)
+	subtitle := canvas.NewText(fmt.Sprintf("YouTube → MP4 / MP3 · v%s", buildinfo.Short()), neonMuted)
 	subtitle.TextSize = 14
 
 	header := container.NewVBox(
@@ -287,7 +333,10 @@ func Run(ctx context.Context, cfg *config.Config, dl *downloader.Client) error {
 
 	w.Show()
 	a.Run()
-	return ctx.Err()
+	if err := ctx.Err(); err != nil {
+		return 1
+	}
+	return 0
 }
 
 func fieldLabel(text string) fyne.CanvasObject {

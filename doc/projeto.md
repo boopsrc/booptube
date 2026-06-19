@@ -103,7 +103,9 @@ Se você recebeu ou baixou os arquivos compilados, basta copiá-los para uma pas
 
 **Requisitos do sistema:** nenhum extra — yt-dlp e ffmpeg já vêm embutidos.
 
-**Tamanho aproximado:** ~200 MB por executável (dependências embutidas por plataforma).
+**Tamanho aproximado:** ~185–195 MB (CLI) / ~235–245 MB (GUI). A maior parte vem do ffmpeg e yt-dlp embutidos.
+
+**Versão:** edite [`VERSION`](../VERSION) antes do release; a CLI expõe `-version` e a GUI mostra no título.
 
 #### Instalar no Windows (exemplo)
 
@@ -248,6 +250,7 @@ booptube/
 │   ├── cli/main.go      # Entrada booptube (CLI)
 │   └── gui/main.go      # Entrada booptube-gui
 ├── config/              # config.json — Load/Save
+├── buildinfo/           # Version, Commit, BuildDate (ldflags)
 ├── downloader/          # yt-dlp, ffmpeg embed, Download()
 ├── video/               # ParseURL, Format (mp4/mp3)
 ├── ui/
@@ -262,8 +265,10 @@ booptube/
 
 | Pasta | Comando de build | Saída |
 |-------|------------------|-------|
-| `cmd/cli` | `go build -o booptube ./cmd/cli` | CLI |
-| `cmd/gui` | `CGO_ENABLED=1 go build -o booptube-gui ./cmd/gui` | GUI (Fyne) |
+| `cmd/cli` | `make build` ou `go build -trimpath -ldflags "-s -w ..." ./cmd/cli` | CLI |
+| `cmd/gui` | `make build-gui` ou `CGO_ENABLED=1 go build ... ./cmd/gui` | GUI (Fyne) |
+
+Versão de release: arquivo [`VERSION`](../VERSION). O Makefile e [`scripts/build.ps1`](../scripts/build.ps1) injetam versão, commit e data via `-X booptube/buildinfo.*`. No Windows, a GUI usa `-H=windowsgui` (sem console).
 
 ---
 
