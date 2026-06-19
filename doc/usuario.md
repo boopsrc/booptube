@@ -283,6 +283,10 @@ Depende da sua internet e do tamanho do vídeo. O progresso no terminal mostra o
 
 Na próxima execução, digite a nova pasta quando perguntado (ou use `-dir "nova\pasta"`). A configuração será atualizada após o próximo download concluído.
 
+### GUI não abre ou não compila
+
+Veja o guia dedicado: **[gui.md](gui.md)** — instalação do MinGW (Windows), compilação com CGO e problemas comuns.
+
 ---
 
 ## Dicas rápidas
@@ -297,4 +301,10 @@ Na próxima execução, digite a nova pasta quando perguntado (ou use `-dir "nov
 
 ## Precisa compilar ou desenvolver?
 
-Este guia é só para **usar** o programa. Para build, Makefile e detalhes técnicos, veja [cli.md](cli.md).
+Este guia é só para **usar** o programa.
+
+| Documento | Conteúdo |
+|-----------|----------|
+| [gui.md](gui.md) | Instalar e compilar a GUI |
+| [projeto.md](projeto.md) | Visão geral completa do projeto |
+| [cli.md](cli.md) | Build, Makefile e detalhes técnicos |

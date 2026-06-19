@@ -1,8 +1,14 @@
-# booptube — documentação técnica da CLI
+# booptube — documentação técnica
 
-Referência para **desenvolvedores** e quem compila o projeto. Para uso do dia a dia, veja **[usuario.md](usuario.md)**.
+Referência para **desenvolvedores** e quem compila o projeto.
 
-CLI interativa para baixar vídeos do YouTube em **mp4** ou **mp3**. O binário embute **yt-dlp** e **ffmpeg** (essentials); na primeira execução são extraídos para o cache do usuário.
+| Guia | Conteúdo |
+|------|----------|
+| [projeto.md](projeto.md) | Visão geral — CLI, GUI, instalação, arquitetura |
+| [gui.md](gui.md) | Instalação e compilação da GUI |
+| [usuario.md](usuario.md) | Uso do dia a dia |
+
+Aplicação para baixar vídeos do YouTube em **mp4** ou **mp3**. Dois binários: **booptube** (CLI) e **booptube-gui** (Fyne). Ambos embutem **yt-dlp** e **ffmpeg**; na primeira execução são extraídos para o cache do usuário.
 
 ## Índice
 
