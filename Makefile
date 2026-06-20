@@ -4,6 +4,7 @@ BUILD_DIR := .build
 STAGING_DIR := installer/staging
 BINARY := $(BUILD_DIR)/booptube
 BINARY_GUI := $(BUILD_DIR)/booptube-gui
+BINARY_WEB := $(BUILD_DIR)/booptube-web
 BUNDLE_TAGS := -tags bundled
 
 VERSION ?= $(shell cat VERSION 2>/dev/null || echo dev)
@@ -24,7 +25,7 @@ else
 endif
 
 .PHONY: fetch-ytdlp fetch-ffmpeg fetch-deps \
-	build build-gui build-bundled build-gui-bundled \
+	build build-gui build-web build-bundled build-gui-bundled \
 	stage stage-portable clean \
 	package package-portable \
 	package-win package-linux package-macos \
@@ -45,6 +46,10 @@ build: fetch-deps
 build-gui: fetch-deps
 	mkdir -p $(BUILD_DIR)
 	CGO_ENABLED=1 go build -trimpath -ldflags "$(GUI_LDFLAGS)" -o $(BINARY_GUI)$(EXE_EXT) ./cmd/gui
+
+build-web: fetch-deps
+	mkdir -p $(BUILD_DIR)
+	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o $(BINARY_WEB)$(EXE_EXT) ./cmd/web
 
 build-bundled: fetch-deps
 	mkdir -p $(BUILD_DIR)

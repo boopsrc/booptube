@@ -14,7 +14,7 @@ foreach ($d in $dirs) {
 }
 
 Invoke-WebRequest -Uri "$Base/yt-dlp.exe" -OutFile "assets/ytdlp/windows-amd64/yt-dlp.exe"
-Invoke-WebRequest -Uri "$Base/yt-dlp" -OutFile "assets/ytdlp/linux-amd64/yt-dlp"
-Invoke-WebRequest -Uri "$Base/yt-dlp" -OutFile "assets/ytdlp/darwin-arm64/yt-dlp"
+Invoke-WebRequest -Uri "$Base/yt-dlp_linux" -OutFile "assets/ytdlp/linux-amd64/yt-dlp"
+Invoke-WebRequest -Uri "$Base/yt-dlp_macos" -OutFile "assets/ytdlp/darwin-arm64/yt-dlp"
 
 Write-Host "yt-dlp $Version fetched into assets/ytdlp/"

@@ -1,0 +1,108 @@
+services:
+  booptube-web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        VERSION: ${BOOPTUBE_VERSION:-dev}
+        COMMIT: ${BOOPTUBE_COMMIT:-none}
+        DATE: ${BOOPTUBE_DATE:-unknown}
+    container_name: booptube-web
+    restart: unless-stopped
+    ports:
+      - "${BOOPTUBE_PORT:-8080}:8080"
+    environment:
+      BOOPTUBE_ADDR: ":8080"
+      BOOPTUBE_DOWNLOAD_DIR: /data/downloads
+      BOOPTUBE_MAX_CONCURRENT: ${BOOPTUBE_MAX_CONCURRENT:-4}
+      BOOPTUBE_FILE_TTL: ${BOOPTUBE_FILE_TTL:-10m}
+      BOOPTUBE_DOWNLOAD_TIMEOUT: ${BOOPTUBE_DOWNLOAD_TIMEOUT:-30m}
+      GOMEMLIMIT: ${GOMEMLIMIT:-1800MiB}
+    volumes:
+      - booptube-downloads:/data/downloads
+    networks:
+      - booptube-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: service
+    labels:
+      service: booptube-web
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: booptube-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki-data:/loki
+    networks:
+      - booptube-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  promtail:
+    image: grafana/promtail:3.0.0
+    container_name: booptube-promtail
+    restart: unless-stopped
+    command: -config.file=/etc/promtail/promtail-config.yaml
+    volumes:
+      - ./promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    networks:
+      - booptube-net
+    depends_on:
+      - loki
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  grafana:
+    image: grafana/grafana:11.0.0
+    container_name: booptube-grafana
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:?Defina GRAFANA_ADMIN_USER no .env}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Defina GRAFANA_ADMIN_PASSWORD no .env}
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_AUTH_DISABLE_LOGIN_FORM: "false"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3000}
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+    networks:
+      - booptube-net
+    depends_on:
+      - loki
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+volumes:
+  booptube-downloads:
+  loki-data:
+  grafana-data:
+
+networks:
+  booptube-net:
+    driver: bridge

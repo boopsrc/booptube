@@ -5,5 +5,7 @@
 /.build/
 /installer/staging/
 /testdata/
+.env
+docker/.env
 *.test
 *.out

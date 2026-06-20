@@ -1,0 +1,95 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "loki", "uid": "loki" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "showTime": true, "showLabels": true, "wrapLogMessage": true },
+      "targets": [
+        {
+          "expr": "{service=\"booptube-web\"} | json | line_format \"{{.msg}} job_id={{.job_id}}\"",
+          "refId": "A"
+        }
+      ],
+      "title": "Logs do booptube-web",
+      "type": "logs"
+    },
+    {
+      "datasource": { "type": "loki", "uid": "loki" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service=\"booptube-web\"} | json | msg=\"download_queued\" [5m]))",
+          "legendFormat": "downloads enfileirados",
+          "refId": "A"
+        }
+      ],
+      "title": "Downloads enfileirados (5m)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "loki", "uid": "loki" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service=\"booptube-web\"} | json | msg=\"download_ready\" [5m]))",
+          "legendFormat": "downloads prontos",
+          "refId": "A"
+        }
+      ],
+      "title": "Downloads concluídos (5m)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "loki", "uid": "loki" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 4,
+      "targets": [
+        {
+          "expr": "sum(count_over_time({service=\"booptube-web\"} | json | msg=\"download_failed\" [5m]))",
+          "legendFormat": "falhas",
+          "refId": "A"
+        }
+      ],
+      "title": "Falhas de download (5m)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "loki", "uid": "loki" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "id": 5,
+      "options": { "showTime": true, "showLabels": true, "wrapLogMessage": true },
+      "targets": [
+        {
+          "expr": "{service=\"booptube-web\"} | json | msg=\"http_request\"",
+          "refId": "A"
+        }
+      ],
+      "title": "Requisições HTTP",
+      "type": "logs"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["booptube"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Booptube Web",
+  "uid": "booptube-web",
+  "version": 1
+}
