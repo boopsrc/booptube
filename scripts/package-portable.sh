@@ -23,7 +23,9 @@ fi
 
 pack_portable() {
 	local os="$1"
-	local name="booptube-${VERSION}-${os}-amd64-portable"
+	local arch="amd64"
+	[[ "$os" == "macos" ]] && arch="arm64"
+	local name="booptube-${VERSION}-${os}-${arch}-portable"
 	case "$os" in
 		windows)
 			[[ -f "$BUILD/booptube.exe" ]] || { echo "run build first" >&2; exit 1; }

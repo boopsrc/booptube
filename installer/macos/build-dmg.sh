@@ -9,7 +9,7 @@ APP="booptube-gui.app"
 DMG="booptube-${VERSION}-macos-arm64-setup.dmg"
 WORK="installer/macos/work"
 
-[[ -d "$STAGING/booptube-gui" ]] || { echo "run make stage first" >&2; exit 1; }
+[[ -f "$STAGING/booptube-gui" && -f "$STAGING/booptube" ]] || { echo "run make stage first" >&2; exit 1; }
 
 rm -rf "$WORK"
 mkdir -p "$WORK/$APP/Contents/MacOS" "$WORK/$APP/Contents/Resources/tools" "$OUT_DIR"

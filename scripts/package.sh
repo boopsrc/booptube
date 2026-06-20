@@ -42,11 +42,11 @@ case "$TARGET" in
 		else
 			echo "nfpm not found; creating tarball installer instead"
 			tar -czf "$OUT_DIR/booptube-${VERSION}-linux-amd64-bundled.tar.gz" -C "$STAGING" .
-			echo "Run: sudo installer/linux/install.sh from extracted dir"
+			echo "Run: sudo bash installer/linux/install.sh from extracted dir"
 		fi
 		;;
 	macos)
-		./installer/macos/build-dmg.sh "$VERSION"
+		bash installer/macos/build-dmg.sh "$VERSION"
 		;;
 	*)
 		echo "unknown target: $TARGET" >&2

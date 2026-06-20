@@ -19,10 +19,12 @@ contents:
     dst: /usr/lib/booptube/tools
   - src: installer/linux/booptube-gui.desktop
     dst: /usr/share/applications/booptube-gui.desktop
-
-symlinks:
-  /usr/bin/booptube: /usr/lib/booptube/booptube
-  /usr/bin/booptube-gui: /usr/lib/booptube/booptube-gui
+  - src: /usr/lib/booptube/booptube
+    dst: /usr/bin/booptube
+    type: symlink
+  - src: /usr/lib/booptube/booptube-gui
+    dst: /usr/bin/booptube-gui
+    type: symlink
 
 depends:
   - libgl1
