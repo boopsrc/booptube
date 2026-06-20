@@ -140,6 +140,35 @@ xattr -cr /Applications/booptube-gui.app
 
 ---
 
+## CI / Release automático (GitHub Actions)
+
+O workflow [`.github/workflows/release.yml`](../.github/workflows/release.yml) publica um **GitHub Release** quando há push em `main` com mensagem de commit contendo **`Bump version`**.
+
+### Fluxo do mantenedor
+
+```bash
+echo "0.2.0" > VERSION
+git add VERSION
+git commit -m "Bump version to 0.2.0"
+git push origin main
+```
+
+1. O job `gate` lê a versão em [`VERSION`](../VERSION)
+2. Três jobs compilam **em paralelo**: Windows, Linux, macOS
+3. O job `release` agrupa os artefatos e cria a tag `v{VERSION}` (ex.: `v0.2.0`)
+
+### Artefatos no GitHub Release
+
+| Plataforma | Portable | Instalador |
+|------------|----------|------------|
+| Windows | `booptube-{v}-windows-amd64-portable.zip` | `booptube-{v}-windows-amd64-setup.exe` |
+| Linux | `booptube-{v}-linux-amd64-portable.tar.gz` | `booptube_{v}_amd64.deb`, `.rpm` |
+| macOS | `booptube-{v}-macos-arm64-portable.tar.gz` | `booptube-{v}-macos-arm64-setup.dmg` |
+
+Cada bump exige **versão nova** em `VERSION` — se a tag `v{VERSION}` já existir, o workflow falha.
+
+---
+
 ## Makefile (referência)
 
 | Target | Descrição |
@@ -163,6 +192,7 @@ xattr -cr /Applications/booptube-gui.app
 | `yt-dlp embutido ausente` (portable) | Rode fetch-deps antes do build |
 | `ISCC not found` | Instale Inno Setup |
 | `nfpm not found` | Instale nfpm ou use tarball + `install.sh` |
+| Release CI falhou (tag existe) | Use versão nova em `VERSION` antes do commit Bump version |
 | GUI abre terminal (Windows) | Recompile GUI com `-H=windowsgui` (já no `build.ps1`) |
 
 ---

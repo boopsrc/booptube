@@ -58,6 +58,12 @@ Instalação e compilação da GUI: **[doc/gui.md](doc/gui.md)**
 
 Loop interativo: pasta → URL → formato (`1`=mp4, `2`=mp3). Digite `q` ou `sair` para encerrar.
 
+## Releases (GitHub)
+
+Binários pré-compilados (portable + instalador) para Windows, Linux e macOS são publicados automaticamente na aba **[Releases](https://github.com/booptube/booptube/releases)** quando um commit em `main` contém **`Bump version`** no título (versão definida em [`VERSION`](VERSION)).
+
+Guia completo: **[doc/installer.md](doc/installer.md)**
+
 ## Compilar (desenvolvedores)
 
 | Sistema | Guia |
