@@ -31,10 +31,10 @@ endif
 	package-portable-win package-portable-linux package-portable-macos
 
 fetch-ytdlp:
-	YTDLP_VERSION=$(YTDLP_VERSION) ./scripts/fetch-ytdlp.sh
+	YTDLP_VERSION=$(YTDLP_VERSION) bash scripts/fetch-ytdlp.sh
 
 fetch-ffmpeg:
-	FFMPEG_VERSION=$(FFMPEG_VERSION) ./scripts/fetch-ffmpeg.sh
+	FFMPEG_VERSION=$(FFMPEG_VERSION) bash scripts/fetch-ffmpeg.sh
 
 fetch-deps: fetch-ytdlp fetch-ffmpeg
 
@@ -55,34 +55,34 @@ build-gui-bundled: fetch-deps
 	CGO_ENABLED=1 go build $(BUNDLE_TAGS) -trimpath -ldflags "$(GUI_LDFLAGS)" -o $(BINARY_GUI)$(EXE_EXT) ./cmd/gui
 
 stage: build-bundled build-gui-bundled
-	./scripts/stage.sh bundled
+	bash scripts/stage.sh bundled
 
 stage-portable: build build-gui
-	./scripts/stage.sh portable
+	bash scripts/stage.sh portable
 
 package-portable-win: build build-gui
-	./scripts/package-portable.sh windows
+	bash scripts/package-portable.sh windows
 
 package-portable-linux: build build-gui
-	./scripts/package-portable.sh linux
+	bash scripts/package-portable.sh linux
 
 package-portable-macos: build build-gui
-	./scripts/package-portable.sh macos
+	bash scripts/package-portable.sh macos
 
 package-win: stage
-	./scripts/package.sh windows
+	bash scripts/package.sh windows
 
 package-linux: stage
-	./scripts/package.sh linux
+	bash scripts/package.sh linux
 
 package-macos: stage
-	./scripts/package.sh macos
+	bash scripts/package.sh macos
 
 package-portable:
-	./scripts/package-portable.sh auto
+	bash scripts/package-portable.sh auto
 
 package:
-	./scripts/package.sh auto
+	bash scripts/package.sh auto
 
 clean:
 	rm -rf $(BUILD_DIR) $(STAGING_DIR)

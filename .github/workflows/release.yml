@@ -65,6 +65,34 @@ jobs:
           ./scripts/stage.ps1 -Mode bundled
           ./scripts/package.ps1
 
+      - name: Debug Windows artifact paths
+        shell: pwsh
+        run: |
+          #region agent log
+          $portable = @(Get-ChildItem -Path ".build/booptube-*-windows-amd64-portable.zip" -ErrorAction SilentlyContinue)
+          $setup = @(Get-ChildItem -Path ".build/booptube-*-windows-amd64-setup.exe" -ErrorAction SilentlyContinue)
+          $all = @(Get-ChildItem -Path ".build" -ErrorAction SilentlyContinue)
+          $payload = @{
+            sessionId = "047ef0"
+            runId = "pre-fix"
+            hypothesisId = "A"
+            location = "release.yml:build-windows:debug-artifacts"
+            message = "pre-upload .build inventory"
+            data = @{
+              cwd = (Get-Location).Path
+              buildDirExists = (Test-Path ".build")
+              allBuildFiles = @($all | ForEach-Object { $_.Name })
+              portableMatches = @($portable | ForEach-Object { $_.FullName })
+              setupMatches = @($setup | ForEach-Object { $_.FullName })
+              portableCount = $portable.Count
+              setupCount = $setup.Count
+            }
+            timestamp = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+          } | ConvertTo-Json -Compress
+          Write-Host $payload
+          Add-Content -Path "debug-047ef0.log" -Value $payload
+          #endregion agent log
+
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -72,6 +100,7 @@ jobs:
           path: |
             .build/booptube-*-windows-amd64-portable.zip
             .build/booptube-*-windows-amd64-setup.exe
+          include-hidden-files: true
           if-no-files-found: error
 
   build-linux:
@@ -99,6 +128,13 @@ jobs:
         env:
           CGO_ENABLED: "1"
         run: |
+          #region agent log
+          for f in scripts/*.sh; do
+            mode=$(stat -c '%a' "$f" 2>/dev/null || stat -f '%OLp' "$f")
+            exec=$([ -x "$f" ] && echo true || echo false)
+            echo "{\"sessionId\":\"d3f91e\",\"hypothesisId\":\"A\",\"location\":\"release.yml:build-linux\",\"message\":\"script permissions\",\"data\":{\"file\":\"$f\",\"mode\":\"$mode\",\"executable\":$exec}}"
+          done
+          #endregion agent log
           make package-portable-linux
           make stage
           make package-linux
@@ -111,6 +147,7 @@ jobs:
             .build/booptube-*-linux-amd64-portable.tar.gz
             .build/*.deb
             .build/*.rpm
+          include-hidden-files: true
           if-no-files-found: error
 
   build-macos:
@@ -128,6 +165,13 @@ jobs:
         env:
           CGO_ENABLED: "1"
         run: |
+          #region agent log
+          for f in scripts/*.sh; do
+            mode=$(stat -f '%OLp' "$f" 2>/dev/null || stat -c '%a' "$f")
+            exec=$([ -x "$f" ] && echo true || echo false)
+            echo "{\"sessionId\":\"d3f91e\",\"hypothesisId\":\"A\",\"location\":\"release.yml:build-macos\",\"message\":\"script permissions\",\"data\":{\"file\":\"$f\",\"mode\":\"$mode\",\"executable\":$exec}}"
+          done
+          #endregion agent log
           make package-portable-macos
           make stage
           make package-macos
@@ -139,6 +183,7 @@ jobs:
           path: |
             .build/booptube-*-macos-arm64-portable.tar.gz
             .build/booptube-*-macos-arm64-setup.dmg
+          include-hidden-files: true
           if-no-files-found: error
 
   release:
