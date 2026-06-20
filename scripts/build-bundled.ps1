@@ -30,23 +30,15 @@ $LdFlags = @(
 )
 
 function Build-Cli {
-    param([switch]$Bundled)
-    $label = if ($Bundled) { "bundled" } else { "portable" }
-    Write-Host "Building booptube (CLI, $label) v$Version..."
-    $args = @("-trimpath", "-ldflags", ($LdFlags -join " "), "-o", (Join-Path $BuildDir "booptube.exe"), "./cmd/cli")
-    if ($Bundled) { $args = @("-tags", "bundled") + $args }
-    go build @args
+    Write-Host "Building booptube (CLI, bundled) v$Version..."
+    go build -tags bundled -trimpath -ldflags ($LdFlags -join " ") -o (Join-Path $BuildDir "booptube.exe") ./cmd/cli
 }
 
 function Build-Gui {
-    param([switch]$Bundled)
-    $label = if ($Bundled) { "bundled" } else { "portable" }
-    Write-Host "Building booptube-gui ($label) v$Version..."
+    Write-Host "Building booptube-gui (bundled) v$Version..."
     $GuiLdFlags = $LdFlags + @("-H=windowsgui")
-    $args = @("-trimpath", "-ldflags", ($GuiLdFlags -join " "), "-o", (Join-Path $BuildDir "booptube-gui.exe"), "./cmd/gui")
-    if ($Bundled) { $args = @("-tags", "bundled") + $args }
     $env:CGO_ENABLED = "1"
-    go build @args
+    go build -tags bundled -trimpath -ldflags ($GuiLdFlags -join " ") -o (Join-Path $BuildDir "booptube-gui.exe") ./cmd/gui
 }
 
 switch ($Target) {
@@ -58,4 +50,4 @@ switch ($Target) {
     }
 }
 
-Write-Host "Done. Binaries in $BuildDir/"
+Write-Host "Done. Bundled binaries in $BuildDir/"

@@ -40,27 +40,33 @@ func (c *Client) Config() config.Config {
 }
 
 func (c *Client) EnsureYtdlp(ctx context.Context) error {
-	if len(assets.Ytdlp) == 0 {
-		return fmt.Errorf("yt-dlp embutido ausente: execute scripts/fetch-ytdlp.ps1, scripts/fetch-ytdlp.sh ou make fetch-ytdlp antes do build")
-	}
 	if c.cfg.YtdlpPath == "" {
-		return fmt.Errorf("caminho de cache do yt-dlp indisponivel")
+		return fmt.Errorf("caminho do yt-dlp indisponivel")
+	}
+	if isInstalledBinary(c.cfg.YtdlpPath) {
+		return nil
+	}
+	if len(assets.Ytdlp) == 0 {
+		return fmt.Errorf("yt-dlp nao encontrado: reinstale booptube ou compile o build portable com fetch-deps")
 	}
 	return ensureBinary(ctx, assets.Ytdlp, c.cfg.YtdlpPath)
 }
 
 func (c *Client) EnsureFfmpeg(ctx context.Context) error {
-	if len(assets.Ffmpeg) == 0 || len(assets.Ffprobe) == 0 {
-		return fmt.Errorf("ffmpeg embutido ausente: execute scripts/fetch-ffmpeg.ps1, scripts/fetch-ffmpeg.sh ou make fetch-ffmpeg antes do build")
-	}
 	if c.cfg.FfmpegDir == "" {
-		return fmt.Errorf("caminho de cache do ffmpeg indisponivel")
+		return fmt.Errorf("caminho do ffmpeg indisponivel")
+	}
+	ffmpegPath := filepath.Join(c.cfg.FfmpegDir, assets.FfmpegName)
+	ffprobePath := filepath.Join(c.cfg.FfmpegDir, assets.FfprobeName)
+	if isInstalledBinary(ffmpegPath) && isInstalledBinary(ffprobePath) {
+		return nil
+	}
+	if len(assets.Ffmpeg) == 0 || len(assets.Ffprobe) == 0 {
+		return fmt.Errorf("ffmpeg nao encontrado: reinstale booptube ou compile o build portable com fetch-deps")
 	}
 	if err := os.MkdirAll(c.cfg.FfmpegDir, 0o755); err != nil {
 		return fmt.Errorf("criar cache ffmpeg: %w", err)
 	}
-	ffmpegPath := filepath.Join(c.cfg.FfmpegDir, assets.FfmpegName)
-	ffprobePath := filepath.Join(c.cfg.FfmpegDir, assets.FfprobeName)
 	if err := ensureBinary(ctx, assets.Ffmpeg, ffmpegPath); err != nil {
 		return fmt.Errorf("instalar ffmpeg: %w", err)
 	}
@@ -68,6 +74,17 @@ func (c *Client) EnsureFfmpeg(ctx context.Context) error {
 		return fmt.Errorf("instalar ffprobe: %w", err)
 	}
 	return nil
+}
+
+func isInstalledBinary(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil || info.IsDir() {
+		return false
+	}
+	if runtime.GOOS == "windows" {
+		return true
+	}
+	return info.Mode()&0o111 != 0
 }
 
 func (c *Client) Download(ctx context.Context, rawURL string, format video.Format, h *Handlers) error {

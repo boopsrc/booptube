@@ -160,6 +160,8 @@ Ou: **Ajustes do Sistema → Privacidade e Segurança → Abrir mesmo assim**.
 
 Variáveis opcionais: `YTDLP_VERSION`, `FFMPEG_VERSION` (ver [cli.md](cli.md)).
 
+Instaladores e zip portable: **[installer.md](installer.md)** (`make package-portable-macos`, `make package-macos`).
+
 ---
 
 ## Ver também

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=booptube
+Comment=Download YouTube videos as MP4 or MP3
+Exec=/usr/lib/booptube/booptube-gui
+Icon=applications-multimedia
+Terminal=false
+Type=Application
+Categories=AudioVideo;Network;
+StartupWMClass=booptube

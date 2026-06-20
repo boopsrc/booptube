@@ -256,10 +256,18 @@ booptube/
 ├── ui/
 │   ├── terminal.go      # Interface CLI (ui.Run)
 │   └── gui/             # Interface GUI Fyne (gui.Run)
-├── assets/              # //go:embed yt-dlp e ffmpeg por OS
-├── scripts/             # fetch-ytdlp, fetch-ffmpeg
+├── assets/              # //go:embed yt-dlp e ffmpeg (build portable)
+├── installer/           # Inno Setup, nfpm, DMG
+├── scripts/             # fetch, build, stage, package
 └── doc/                 # Documentação
 ```
+
+### Portable vs bundled
+
+| Variante | Tag | Embed | Uso |
+|----------|-----|-------|-----|
+| **Portable** | *(nenhuma)* | Sim | `make build`, zip em `.build/*-portable.*` |
+| **Bundled** | `bundled` | Não — deps em `tools/` | Instaladores (`make package-*`) |
 
 ### Dois binários, um repositório
 
@@ -268,7 +276,7 @@ booptube/
 | `cmd/cli` | `make build` ou `go build -trimpath -ldflags "-s -w ..." ./cmd/cli` | CLI |
 | `cmd/gui` | `make build-gui` ou `CGO_ENABLED=1 go build ... ./cmd/gui` | GUI (Fyne) |
 
-Versão de release: arquivo [`VERSION`](../VERSION). O Makefile e [`scripts/build.ps1`](../scripts/build.ps1) injetam versão, commit e data via `-X booptube/buildinfo.*`. No Windows, a GUI usa `-H=windowsgui` (sem console).
+Versão de release: arquivo [`VERSION`](../VERSION). Builds e instaladores: **[installer.md](installer.md)**.
 
 ---
 

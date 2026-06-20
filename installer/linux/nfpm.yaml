@@ -1,0 +1,39 @@
+name: booptube
+arch: amd64
+platform: linux
+version: "${VERSION}"
+version_schema: semver
+section: utils
+priority: optional
+maintainer: booptube
+description: Download YouTube videos as MP4 or MP3
+homepage: https://github.com/booptube/booptube
+license: MIT
+
+contents:
+  - src: installer/staging/booptube
+    dst: /usr/lib/booptube/booptube
+  - src: installer/staging/booptube-gui
+    dst: /usr/lib/booptube/booptube-gui
+  - src: installer/staging/tools
+    dst: /usr/lib/booptube/tools
+  - src: installer/linux/booptube-gui.desktop
+    dst: /usr/share/applications/booptube-gui.desktop
+
+symlinks:
+  /usr/bin/booptube: /usr/lib/booptube/booptube
+  /usr/bin/booptube-gui: /usr/lib/booptube/booptube-gui
+
+depends:
+  - libgl1
+  - libx11-6
+  - libxcursor1
+  - libxrandr2
+
+overrides:
+  deb:
+    depends:
+      - libgl1
+      - libx11-6
+      - libxcursor1
+      - libxrandr2

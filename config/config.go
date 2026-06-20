@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
+
+	"booptube/assets"
 )
 
 type Config struct {
@@ -65,18 +66,20 @@ func configPath() (string, error) {
 }
 
 func defaultYtdlpPath() string {
+	if dir := installToolsDir(); dir != "" {
+		return filepath.Join(dir, assets.YtdlpName)
+	}
 	dir, err := os.UserCacheDir()
 	if err != nil {
 		return ""
 	}
-	name := "yt-dlp"
-	if runtime.GOOS == "windows" {
-		name = "yt-dlp.exe"
-	}
-	return filepath.Join(dir, "booptube", name)
+	return filepath.Join(dir, "booptube", assets.YtdlpName)
 }
 
 func defaultFfmpegDir() string {
+	if dir := installToolsDir(); dir != "" {
+		return dir
+	}
 	dir, err := os.UserCacheDir()
 	if err != nil {
 		return ""

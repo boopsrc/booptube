@@ -64,9 +64,9 @@ Os binários ficam em `assets/ytdlp/` e `assets/ffmpeg/` (não vão para o git).
 
 ---
 
-## 2. Compilar (recomendado)
+## 2. Compilar (portable — padrão)
 
-Após o fetch, use o script de build com flags otimizadas (`-s -w`, versão injetada, GUI sem console):
+Após o fetch, use o script de build com flags otimizadas (`-s -w`, versão injetada, GUI sem console). **Sem tag `bundled`** — yt-dlp e ffmpeg ficam embutidos no exe (empacotamento atual).
 
 ```powershell
 .\scripts\build.ps1
@@ -191,7 +191,20 @@ No dia a dia no Windows, prefira **PowerShell + scripts `.ps1`** (seções 1–3
 
 ---
 
+## Instalador e release portable
+
+| Tipo | Comandos | Saída |
+|------|----------|-------|
+| **Portable zip** | `.\scripts\build.ps1` → `.\scripts\package-portable.ps1` | `.build/*-portable.zip` |
+| **Instalador slim** | `.\scripts\build-bundled.ps1` → `.\scripts\stage.ps1` → `.\scripts\package.ps1` | `.build/*-setup.exe` |
+
+Guia completo: **[installer.md](installer.md)** (Inno Setup, tamanhos slim vs portable).
+
+---
+
 ## Ver também
+
+- [installer.md](installer.md) — instaladores e releases
 
 - [gui.md](gui.md) — usar a interface gráfica
 - [cli.md](cli.md) — referência técnica e Makefile

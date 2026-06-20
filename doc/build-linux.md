@@ -152,6 +152,8 @@ sudo install -m 755 .build/booptube .build/booptube-gui /usr/local/bin/
 
 Variáveis opcionais: `YTDLP_VERSION`, `FFMPEG_VERSION` (ver [cli.md](cli.md)).
 
+Instaladores e zip portable: **[installer.md](installer.md)** (`make package-portable-linux`, `make package-linux`).
+
 ---
 
 ## Ver também

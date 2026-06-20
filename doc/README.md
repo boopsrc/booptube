@@ -9,6 +9,7 @@
 | [gui.md](gui.md) | **Usuário / quem compila a GUI** | Instalar, compilar e usar o `booptube-gui` |
 | [usuario.md](usuario.md) | **Usuário final** | Como usar CLI e GUI no dia a dia |
 | [cli.md](cli.md) | **Desenvolvedor** | Referência técnica, Makefile, config, embed |
+| [installer.md](installer.md) | **Quem publica releases** | Portable vs bundled, instaladores Windows/Linux/macOS |
 
 ## Por onde começar
 
@@ -20,3 +21,4 @@
 - Quer **usar o terminal** → [usuario.md](usuario.md) (seção CLI)
 - Quer **entender tudo que existe no projeto** → [projeto.md](projeto.md)
 - Quer **detalhes técnicos (embed, config, Makefile)** → [cli.md](cli.md)
+- Quer **gerar zip portable ou instalador** → [installer.md](installer.md)

@@ -20,6 +20,7 @@ Disponível em **dois modos**:
 | **[doc/build-linux.md](doc/build-linux.md)** | Compilar no Linux |
 | **[doc/build-macos.md](doc/build-macos.md)** | Compilar no macOS |
 | **[doc/cli.md](doc/cli.md)** | Desenvolvedor — referência técnica, Makefile, config |
+| **[doc/installer.md](doc/installer.md)** | Releases — portable (zip) e instaladores (setup/deb/dmg) |
 | **[doc/README.md](doc/README.md)** | Índice da documentação |
 
 ## Uso rápido — GUI
@@ -65,4 +66,4 @@ Loop interativo: pasta → URL → formato (`1`=mp4, `2`=mp3). Digite `q` ou `sa
 | Linux | **[doc/build-linux.md](doc/build-linux.md)** |
 | macOS | **[doc/build-macos.md](doc/build-macos.md)** |
 
-Referência técnica: [doc/cli.md](doc/cli.md) · Visão geral: [doc/projeto.md](doc/projeto.md)
+Referência técnica: [doc/cli.md](doc/cli.md) · Instaladores: [doc/installer.md](doc/installer.md) · Visão geral: [doc/projeto.md](doc/projeto.md)

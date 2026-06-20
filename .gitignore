@@ -3,6 +3,7 @@
 /assets/ffmpeg/**/*
 !/assets/ffmpeg/.gitkeep
 /.build/
+/installer/staging/
 /testdata/
 *.test
 *.out
