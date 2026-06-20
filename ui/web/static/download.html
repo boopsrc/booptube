@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>booptube — Download</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="glow glow-cyan"></div>
+  <div class="glow glow-magenta"></div>
+
+  <main class="container">
+    <header class="header">
+      <h1 class="title">booptube</h1>
+      <p class="subtitle">Página de download</p>
+    </header>
+
+    <section class="card hidden" id="loading-section">
+      <p class="ready-msg">Carregando...</p>
+    </section>
+
+    <section class="card hidden" id="progress-section">
+      <div class="status-row">
+        <span class="label">Status</span>
+        <span id="status-text" class="status-badge">—</span>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+      </div>
+      <p class="progress-pct" id="progress-pct">0%</p>
+      <pre class="log" id="log"></pre>
+    </section>
+
+    <section class="card hidden" id="ready-section">
+      <p class="ready-msg">Arquivo pronto para download!</p>
+      <p class="filename" id="filename"></p>
+      <p class="expires" id="expires"></p>
+      <a id="download-link" class="btn btn-primary" href="#" download>Baixar arquivo</a>
+    </section>
+
+    <section class="card error hidden" id="error-section">
+      <p class="error-msg" id="error-msg"></p>
+      <a href="/" class="btn btn-secondary">Voltar ao início</a>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>O arquivo é removido do servidor após o tempo expirar.</p>
+  </footer>
+
+  <script src="/static/download.js"></script>
+</body>
+</html>

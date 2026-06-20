@@ -35,25 +35,6 @@
       <button type="button" id="btn-download" class="btn btn-primary">Baixar</button>
     </section>
 
-    <section class="card hidden" id="progress-section">
-      <div class="status-row">
-        <span class="label">Status</span>
-        <span id="status-text" class="status-badge">—</span>
-      </div>
-      <div class="progress-wrap">
-        <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
-      </div>
-      <p class="progress-pct" id="progress-pct">0%</p>
-      <pre class="log" id="log"></pre>
-    </section>
-
-    <section class="card hidden" id="ready-section">
-      <p class="ready-msg">Arquivo pronto para download!</p>
-      <p class="filename" id="filename"></p>
-      <p class="expires" id="expires"></p>
-      <a id="download-link" class="btn btn-primary" href="#" download>Baixar arquivo</a>
-    </section>
-
     <section class="card error hidden" id="error-section">
       <p class="error-msg" id="error-msg"></p>
       <button type="button" id="btn-retry" class="btn btn-secondary">Tentar novamente</button>
@@ -61,7 +42,7 @@
   </main>
 
   <footer class="footer">
-    <p>Arquivos ficam disponíveis por 10 minutos após o download no servidor.</p>
+    <p>Após iniciar o download você será redirecionado para uma página com link compartilhável.</p>
   </footer>
 
   <script src="/static/app.js"></script>

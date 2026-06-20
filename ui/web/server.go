@@ -3,7 +3,6 @@ package web
 import (
 	"context"
 	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -31,19 +30,22 @@ type Server struct {
 }
 
 type Job struct {
-	ID          string    `json:"id"`
-	URL         string    `json:"url"`
-	Format      string    `json:"format"`
-	Status      string    `json:"status"`
-	Progress    float64   `json:"progress"`
-	FilePath    string    `json:"-"`
-	Filename    string    `json:"filename,omitempty"`
-	Error       string    `json:"error,omitempty"`
-	Log         []string  `json:"log,omitempty"`
-	CreatedAt   time.Time `json:"created_at"`
-	ReadyAt     time.Time `json:"ready_at,omitempty"`
-	ExpiresAt   time.Time `json:"expires_at,omitempty"`
-	DownloadURL string    `json:"download_url,omitempty"`
+	ID            string    `json:"id"`
+	URL           string    `json:"url"`
+	Format        string    `json:"format"`
+	Status        string    `json:"status"`
+	Progress      float64   `json:"progress"`
+	FilePath      string    `json:"-"`
+	Filename      string    `json:"filename,omitempty"`
+	Error         string    `json:"error,omitempty"`
+	Log           []string  `json:"log,omitempty"`
+	CreatedAt     time.Time `json:"created_at"`
+	FileCreatedAt time.Time `json:"file_created_at,omitempty"`
+	ReadyAt       time.Time `json:"ready_at,omitempty"`
+	ExpiresAt     time.Time `json:"expires_at,omitempty"`
+	TTLSeconds    int       `json:"ttl_seconds"`
+	PageURL       string    `json:"page_url,omitempty"`
+	DownloadURL   string    `json:"download_url,omitempty"`
 }
 
 type createRequest struct {
@@ -72,6 +74,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/downloads", s.handleCreate)
 	mux.HandleFunc("GET /api/downloads/{id}", s.handleStatus)
 	mux.HandleFunc("GET /api/downloads/{id}/file", s.handleFile)
+	mux.HandleFunc("GET /d/{id}", s.handleDownloadPage)
+	mux.HandleFunc("GET /d/{id}/file", s.handleFile)
 	return s.logMiddleware(mux)
 }
 
@@ -85,7 +89,15 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
-	data, err := staticFS.ReadFile("static/index.html")
+	serveStaticHTML(w, "static/index.html")
+}
+
+func (s *Server) handleDownloadPage(w http.ResponseWriter, r *http.Request) {
+	serveStaticHTML(w, "static/download.html")
+}
+
+func serveStaticHTML(w http.ResponseWriter, name string) {
+	data, err := staticFS.ReadFile(name)
 	if err != nil {
 		http.Error(w, "pagina indisponivel", http.StatusInternalServerError)
 		return
@@ -117,12 +129,15 @@ func (s *Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	pageURL := "/d/" + id
 	job := &Job{
-		ID:        id,
-		URL:       parsedURL,
-		Format:    format.String(),
-		Status:    "queued",
-		CreatedAt: time.Now().UTC(),
+		ID:         id,
+		URL:        parsedURL,
+		Format:     format.String(),
+		Status:     "queued",
+		CreatedAt:  time.Now().UTC(),
+		PageURL:    pageURL,
+		TTLSeconds: int(s.cfg.FileTTL.Seconds()),
 	}
 
 	s.mu.Lock()
@@ -138,8 +153,9 @@ func (s *Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 	)
 
 	writeJSON(w, http.StatusAccepted, map[string]any{
-		"id":     id,
-		"status": "queued",
+		"id":       id,
+		"status":   "queued",
+		"page_url": pageURL,
 	})
 }
 
@@ -155,6 +171,10 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleFile(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
+	s.serveJobFile(w, r, id)
+}
+
+func (s *Server) serveJobFile(w http.ResponseWriter, r *http.Request, id string) {
 	job := s.getJob(id)
 	if job == nil {
 		http.Error(w, "job nao encontrado", http.StatusNotFound)
@@ -247,6 +267,13 @@ func (s *Server) runJob(id string) {
 
 	var logMu sync.Mutex
 	var logLines []string
+	updateJob := func(fn func(*Job)) {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		if j := s.jobs[id]; j != nil {
+			fn(j)
+		}
+	}
 	handlers := &downloader.Handlers{
 		OnLine: func(line string) {
 			logMu.Lock()
@@ -254,51 +281,69 @@ func (s *Server) runJob(id string) {
 			if len(logLines) > 20 {
 				logLines = logLines[len(logLines)-20:]
 			}
+			lines := append([]string(nil), logLines...)
 			logMu.Unlock()
+
+			updateJob(func(j *Job) {
+				j.Log = lines
+				if pct, ok := downloader.ParseProgress(line); ok {
+					j.Progress = pct
+				}
+			})
 		},
 		OnProgress: func(pct float64) {
-			s.mu.Lock()
-			if j := s.jobs[id]; j != nil {
+			logMu.Lock()
+			lines := append([]string(nil), logLines...)
+			logMu.Unlock()
+			updateJob(func(j *Job) {
 				j.Progress = pct
-				logMu.Lock()
-				j.Log = append([]string(nil), logLines...)
-				logMu.Unlock()
-			}
-			s.mu.Unlock()
+				j.Log = lines
+			})
 		},
 	}
 
 	format, _ := video.FormatFromString(formatStr)
-	filePath, err := s.dl.DownloadTo(ctx, url, format, jobDir, handlers)
+	outFile := filepath.Join(jobDir, id+"."+formatStr)
+	filePath, err := s.dl.DownloadToFile(ctx, url, format, outFile, handlers)
 	if err != nil {
 		s.failJob(id, err)
 		os.RemoveAll(jobDir)
 		return
 	}
 
-	readyAt := time.Now().UTC()
-	expiresAt := readyAt.Add(s.cfg.FileTTL)
-	filename := filepath.Base(filePath)
+	info, err := os.Stat(filePath)
+	if err != nil {
+		s.failJob(id, fmt.Errorf("stat arquivo: %w", err))
+		os.RemoveAll(jobDir)
+		return
+	}
 
-	s.mu.Lock()
-	if j := s.jobs[id]; j != nil {
+	fileCreatedAt := info.ModTime().UTC()
+	expiresAt := fileCreatedAt.Add(s.cfg.FileTTL)
+	filename := filepath.Base(filePath)
+	pageURL := "/d/" + id
+	downloadURL := pageURL + "/file"
+
+	updateJob(func(j *Job) {
 		j.Status = "ready"
 		j.Progress = 100
 		j.FilePath = filePath
 		j.Filename = filename
-		j.ReadyAt = readyAt
+		j.ReadyAt = time.Now().UTC()
+		j.FileCreatedAt = fileCreatedAt
 		j.ExpiresAt = expiresAt
-		j.DownloadURL = "/api/downloads/" + id + "/file"
+		j.PageURL = pageURL
+		j.DownloadURL = downloadURL
 		logMu.Lock()
 		j.Log = append([]string(nil), logLines...)
 		logMu.Unlock()
-	}
-	s.mu.Unlock()
+	})
 
 	slog.Info("download_ready",
 		"job_id", id,
 		"filename", filename,
 		"duration_ms", time.Since(start).Milliseconds(),
+		"file_created_at", fileCreatedAt.Format(time.RFC3339),
 		"expires_at", expiresAt.Format(time.RFC3339),
 	)
 
@@ -420,7 +465,10 @@ func newJobID() (string, error) {
 	if _, err := rand.Read(b[:]); err != nil {
 		return "", err
 	}
-	return hex.EncodeToString(b[:]), nil
+	b[6] = (b[6] & 0x0f) | 0x40
+	b[8] = (b[8] & 0x3f) | 0x80
+	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x",
+		b[0:4], b[4:6], b[6:8], b[8:10], b[10:16]), nil
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {

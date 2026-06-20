@@ -26,7 +26,24 @@ type Handlers struct {
 	OnProgress func(float64)
 }
 
-var progressRE = regexp.MustCompile(`(\d+(?:\.\d+)?)%`)
+var progressRE = regexp.MustCompile(`\[download\]\s*(\d+(?:\.\d+)?)%|(\d+(?:\.\d+)?)%`)
+
+func ParseProgress(line string) (float64, bool) {
+	m := progressRE.FindStringSubmatch(line)
+	if len(m) < 2 {
+		return 0, false
+	}
+	for i := 1; i < len(m); i++ {
+		if m[i] == "" {
+			continue
+		}
+		var pct float64
+		if _, err := fmt.Sscanf(m[i], "%f", &pct); err == nil {
+			return pct, true
+		}
+	}
+	return 0, false
+}
 
 type Client struct {
 	cfg config.Config
@@ -133,6 +150,21 @@ func (c *Client) DownloadTo(ctx context.Context, rawURL string, format video.For
 	if err := ensureWritableDir(outDir); err != nil {
 		return "", err
 	}
+	out := filepath.Join(outDir, "%(title)s.%(ext)s")
+	return c.download(ctx, rawURL, format, out, h)
+}
+
+func (c *Client) DownloadToFile(ctx context.Context, rawURL string, format video.Format, outFile string, h *Handlers) (string, error) {
+	if outFile == "" {
+		return "", fmt.Errorf("arquivo de destino nao definido")
+	}
+	if err := ensureWritableDir(filepath.Dir(outFile)); err != nil {
+		return "", err
+	}
+	return c.download(ctx, rawURL, format, outFile, h)
+}
+
+func (c *Client) download(ctx context.Context, rawURL string, format video.Format, out string, h *Handlers) (string, error) {
 	if err := c.EnsureYtdlp(ctx); err != nil {
 		return "", err
 	}
@@ -140,8 +172,8 @@ func (c *Client) DownloadTo(ctx context.Context, rawURL string, format video.For
 		return "", err
 	}
 
-	out := filepath.Join(outDir, "%(title)s.%(ext)s")
-	args := buildYtdlpArgs(c.cfg.FfmpegDir, out, rawURL, format)
+	piped := h != nil
+	args := buildYtdlpArgs(c.cfg.FfmpegDir, out, rawURL, format, piped)
 	if args == nil {
 		return "", fmt.Errorf("formato nao suportado: %s", format)
 	}
@@ -152,7 +184,10 @@ func (c *Client) DownloadTo(ctx context.Context, rawURL string, format video.For
 		if err := cmd.Run(); err != nil {
 			return "", fmt.Errorf("download falhou: %w", err)
 		}
-		return findOutputFile(outDir)
+		if strings.Contains(out, "%(") {
+			return findOutputFile(filepath.Dir(out))
+		}
+		return out, nil
 	}
 
 	stdout, err := cmd.StdoutPipe()
@@ -182,15 +217,24 @@ func (c *Client) DownloadTo(ctx context.Context, rawURL string, format video.For
 	if err := cmd.Wait(); err != nil {
 		return "", fmt.Errorf("download falhou: %w", err)
 	}
-	return findOutputFile(outDir)
+	if strings.Contains(out, "%(") {
+		return findOutputFile(filepath.Dir(out))
+	}
+	if _, err := os.Stat(out); err != nil {
+		return "", fmt.Errorf("arquivo nao encontrado: %w", err)
+	}
+	return out, nil
 }
 
-func buildYtdlpArgs(ffmpegDir, out, rawURL string, format video.Format) []string {
+func buildYtdlpArgs(ffmpegDir, out, rawURL string, format video.Format, piped bool) []string {
 	args := []string{
 		"--no-playlist",
 		"--ffmpeg-location", ffmpegDir,
 		"-o", out,
 		rawURL,
+	}
+	if piped {
+		args = append([]string{"--newline", "--progress"}, args...)
 	}
 	switch format {
 	case video.FormatMP4:
@@ -256,11 +300,8 @@ func scanStream(r io.Reader, h *Handlers) {
 			h.OnLine(line)
 		}
 		if h.OnProgress != nil {
-			if m := progressRE.FindStringSubmatch(line); len(m) > 1 {
-				var pct float64
-				if _, err := fmt.Sscanf(m[1], "%f", &pct); err == nil {
-					h.OnProgress(pct)
-				}
+			if pct, ok := ParseProgress(line); ok {
+				h.OnProgress(pct)
 			}
 		}
 	}

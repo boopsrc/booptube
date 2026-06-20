@@ -13,7 +13,7 @@ Servidor HTTP em Go que baixa vídeos do YouTube **no servidor** e entrega o arq
 
 | Componente | Descrição |
 |------------|-----------|
-| **Página web** | UI neon em português — URL, formato MP4/MP3, progresso |
+| **Página web** | UI neon — formulário inicial + página `/d/{uuid}` com progresso e download |
 | **API REST** | Enfileira downloads, consulta status, serve arquivo |
 | **Job de limpeza** | Remove arquivos após TTL configurável (padrão 10 min) |
 | **Observabilidade** | Logs JSON → Loki → Grafana |
@@ -53,7 +53,8 @@ docker compose up -d --build
 
 | URL | Descrição |
 |-----|-----------|
-| http://localhost:8080 | Interface web |
+| http://localhost:8080 | Formulário inicial (URL + formato) |
+| http://localhost:8080/d/{uuid} | Página de download (progresso, link, countdown) |
 | http://localhost:8080/health | Health check |
 | http://localhost:3000 | Grafana (login obrigatório) |
 
@@ -116,10 +117,21 @@ Inicia um download.
 
 ```json
 {
-  "id": "a1b2c3...",
-  "status": "queued"
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "status": "queued",
+  "page_url": "/d/a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 }
 ```
+
+O browser é redirecionado automaticamente para `page_url`.
+
+### `GET /d/{id}`
+
+Página HTML de download com barra de progresso, countdown e botão de download.
+
+### `GET /d/{id}/file`
+
+Baixa o arquivo gerado (mesmo comportamento de `/api/downloads/{id}/file`).
 
 ### `GET /api/downloads/{id}`
 
@@ -129,15 +141,17 @@ Consulta status do job.
 
 ```json
 {
-  "id": "a1b2c3...",
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "url": "https://...",
   "format": "mp4",
   "status": "downloading",
   "progress": 45.2,
-  "log": ["[download] ..."],
+  "log": ["[download] 45.2% of ..."],
   "created_at": "2026-06-19T12:00:00Z",
-  "ready_at": "",
+  "file_created_at": "",
   "expires_at": "",
+  "ttl_seconds": 600,
+  "page_url": "/d/a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "download_url": ""
 }
 ```
@@ -150,11 +164,16 @@ Quando `ready`:
 {
   "status": "ready",
   "progress": 100,
-  "filename": "Titulo do video.mp4",
-  "download_url": "/api/downloads/a1b2c3.../file",
-  "expires_at": "2026-06-19T12:10:00Z"
+  "filename": "a1b2c3d4-e5f6-7890-abcd-ef1234567890.mp4",
+  "page_url": "/d/a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "download_url": "/d/a1b2c3d4-e5f6-7890-abcd-ef1234567890/file",
+  "file_created_at": "2026-06-19T12:05:00Z",
+  "expires_at": "2026-06-19T12:15:00Z",
+  "ttl_seconds": 600
 }
 ```
+
+O countdown na página usa `expires_at`, calculado como `file_created_at + BOOPTUBE_FILE_TTL` (data de criação do arquivo no disco).
 
 ### `GET /api/downloads/{id}/file`
 
@@ -227,19 +246,22 @@ Abra http://localhost:8080
 ## Arquitetura
 
 ```text
-Browser
+Página inicial (/)
   → POST /api/downloads (enfileira)
-  → GET  /api/downloads/{id} (polling)
-  → GET  /api/downloads/{id}/file (download)
+  → redirect /d/{uuid}
+
+Página de download (/d/{uuid})
+  → GET /api/downloads/{uuid} (polling 1s)
+  → GET /d/{uuid}/file (download do arquivo)
 
 booptube-web
   → fila FIFO + semáforo (max concurrent)
-  → downloader.DownloadTo(jobDir)
-  → yt-dlp + ffmpeg
-  → TTL 10min → remove arquivo
+  → downloader.DownloadToFile({uuid}.mp4)
+  → yt-dlp --newline --progress
+  → expires_at = file_created_at + TTL → remove arquivo
 ```
 
-Cada job usa pasta isolada: `{BOOPTUBE_DOWNLOAD_DIR}/{jobID}/`.
+Cada job usa pasta `{BOOPTUBE_DOWNLOAD_DIR}/{uuid}/` e arquivo `{uuid}.mp4` ou `{uuid}.mp3`.
 
 ---
 
