@@ -11,15 +11,6 @@ trap 'rm -rf "$tmpdir"' EXIT
 
 mkdir -p assets/ffmpeg/windows-amd64 assets/ffmpeg/linux-amd64 assets/ffmpeg/darwin-arm64
 
-#region agent log
-log_debug() {
-	local msg="$1" hid="$2" data="$3"
-	local ts=$(($(date +%s) * 1000))
-	printf '{"sessionId":"bd5798","runId":"verify","hypothesisId":"%s","location":"fetch-ffmpeg.sh","message":"%s","data":%s,"timestamp":%s}\n' \
-		"$hid" "$msg" "$data" "$ts" >> "${root}/debug-bd5798.log" 2>/dev/null || true
-}
-#endregion agent log
-
 need_platforms() {
 	if [[ "${FETCH_FFMPEG_PLATFORMS:-}" == "all" ]]; then
 		echo "windows linux macos"
@@ -42,21 +33,12 @@ curl_download() {
 	shift 2
 	local url code
 	for url in "$@"; do
-		#region agent log
-		log_debug "curl attempt" "C" "{\"platform\":\"${platform}\",\"url\":\"${url}\"}"
-		#endregion agent log
 		code=$(curl -sSL -w "%{http_code}" -o "$out" \
 			-H "User-Agent: booptube-build/1.0 (+https://github.com/booptube/booptube)" \
 			"$url" || echo "000")
 		if [[ "$code" == "200" && -s "$out" ]]; then
-			#region agent log
-			log_debug "curl ok" "C" "{\"platform\":\"${platform}\",\"url\":\"${url}\",\"code\":${code}}"
-			#endregion agent log
 			return 0
 		fi
-		#region agent log
-		log_debug "curl failed" "C" "{\"platform\":\"${platform}\",\"url\":\"${url}\",\"code\":\"${code}\"}"
-		#endregion agent log
 		rm -f "$out"
 	done
 	echo "failed to download ffmpeg for ${platform}" >&2
@@ -103,10 +85,6 @@ fetch_macos() {
 	find "$mac_dir" -type f \( -name ffmpeg -o -name ffprobe \) -exec cp -f {} assets/ffmpeg/darwin-arm64/ \;
 	chmod +x assets/ffmpeg/darwin-arm64/ffmpeg assets/ffmpeg/darwin-arm64/ffprobe
 }
-
-#region agent log
-log_debug "fetch platforms" "B" "{\"platforms\":\"$(need_platforms)\",\"version\":\"${version}\"}"
-#endregion agent log
 
 for platform in $(need_platforms); do
 	case "$platform" in
